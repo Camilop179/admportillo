@@ -59,6 +59,7 @@ public final class Ventas extends javax.swing.JFrame {
         Icon icono = new ImageIcon(imagen1.getImage().getScaledInstance(45, 45, Image.SCALE_DEFAULT));
         jLabelFecha.setText(Fechas.fechaActual());
         this.setLocationRelativeTo(null);
+        m=true;
         if (Reportes.m == 1) {
             jLabelImprimir.setVisible(true);
             jLabelNoVenta.setText("" + Reportes.nro);

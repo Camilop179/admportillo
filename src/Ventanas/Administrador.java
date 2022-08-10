@@ -27,12 +27,13 @@ import java.util.GregorianCalendar;
 public final class Administrador extends javax.swing.JFrame {
 
     public static boolean m;
+
     public Administrador() {
-        m=true;
         Fondo fondo = new Fondo("FondoMenu.jpg");
         this.setContentPane(fondo);
         this.setUndecorated(true);
         initComponents();
+        m = true;
         new ImagenBoton("cerrar.png", JBotonCerrar, JBotonCerrar.getBounds().width, JBotonCerrar.getBounds().height);
         new ImagenBoton("Minimizar.png", Minimizar, Minimizar.getBounds().width, Minimizar.getBounds().height);
         JBotonCerrar.setContentAreaFilled(false);
@@ -87,7 +88,7 @@ public final class Administrador extends javax.swing.JFrame {
     }
 
     /**
-     
+     *
      */
     public void invisible() {
         jLabelbarra.setVisible(false);
@@ -130,7 +131,7 @@ public final class Administrador extends javax.swing.JFrame {
         GregorianCalendar semana = new GregorianCalendar();
         semana.setTime(fecha_actual);
         Month mes = LocalDate.now().getMonth();
-        LocalDate fecha_semana = LocalDate.of(LocalDate.now().getYear(),mes,1);
+        LocalDate fecha_semana = LocalDate.of(LocalDate.now().getYear(), mes, 1);
         java.util.Date fecha_sem = Date.from(fecha_semana.atStartOfDay(defaultZoneId).toInstant());
         java.sql.Date bd_fecha = new java.sql.Date(fecha_sem.getTime());
 
@@ -491,8 +492,12 @@ public final class Administrador extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jLabel6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel6MouseClicked
-        Ventas venta = new Ventas();
-        venta.setVisible(true);
+       
+        if (!Ventas.m) {
+            new Ventas().setVisible(true);
+        } else {
+            JOptionPane.showMessageDialog(this, "La ventana ya esta Abierta");
+        }
     }//GEN-LAST:event_jLabel6MouseClicked
 
     private void jLabel1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel1MouseClicked
@@ -553,7 +558,7 @@ public final class Administrador extends javax.swing.JFrame {
 
     int xm;
     int ym;
-    
+
     private void formMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_formMousePressed
         xm = evt.getX();
         ym = evt.getY();
@@ -577,7 +582,7 @@ public final class Administrador extends javax.swing.JFrame {
         this.setState(ICONIFIED);
     }//GEN-LAST:event_MinimizarActionPerformed
 
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton JBotonCerrar;
     private javax.swing.JButton Minimizar;
