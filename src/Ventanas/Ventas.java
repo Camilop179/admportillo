@@ -19,8 +19,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +32,6 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.util.JRLoader;
 import net.sf.jasperreports.view.JasperViewer;
-import org.bouncycastle.pqc.jcajce.provider.qtesla.SignatureSpi;
 
 /**
  *
@@ -50,6 +47,7 @@ public final class Ventas extends javax.swing.JFrame {
 
         Fondo fondo = new Fondo("FondoMenu.jpg");
         this.setContentPane(fondo);
+        setFocusable(true);
         initComponents();
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         new ImagenBoton("vender.png", jButtonVender, 45, 45);
@@ -82,7 +80,7 @@ public final class Ventas extends javax.swing.JFrame {
             addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosing(WindowEvent e) {
-                    
+
                     Object[] opc = new Object[]{"SI", "NO"};
                     int i = JOptionPane.showOptionDialog(null, "Desea Cancelar Venta?", "Salir de Ventas", JOptionPane.DEFAULT_OPTION,
                             JOptionPane.QUESTION_MESSAGE,null,opc,opc[0]);
@@ -205,7 +203,7 @@ public final class Ventas extends javax.swing.JFrame {
     }
 
     public void imprimir1() {
-        JasperReport jr = null;
+        JasperReport jr;
         String file = "src/Clases/report1.jasper";
         try {
             Connection cn = Conexion.Conexion();
@@ -270,11 +268,6 @@ public final class Ventas extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setSize(new java.awt.Dimension(1000, 600));
-        addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyPressed(java.awt.event.KeyEvent evt) {
-                formKeyPressed(evt);
-            }
-        });
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(255, 255, 255));
@@ -307,11 +300,6 @@ public final class Ventas extends javax.swing.JFrame {
         jLabel6.setText("Nombre:");
 
         jTextFieldCodigo.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        jTextFieldCodigo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextFieldCodigoActionPerformed(evt);
-            }
-        });
         jTextFieldCodigo.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 jTextFieldCodigoKeyPressed(evt);
@@ -528,25 +516,7 @@ public final class Ventas extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButtonVenderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonVenderActionPerformed
-
-        new FormaPago(this, true).setVisible(true);
-        if (FormaPago.m) {
-            int m = JOptionPane.showConfirmDialog(null, "¿Desea imprimir Factura?", "Venta Exitosa", JOptionPane.YES_NO_OPTION);
-            if (m == 0) {
-                imprimir1();
-            }
-            total = 0;
-            jTextFieldCedula.setText("");
-            jTextFieldNombre.setText("");
-            jTextFieldTotal.setText("0");
-            limpiar();
-            nroVenta();
-
-            Administrador.VentaDia();
-            Administrador.VentaMes();
-            Administrador.VentaSemana();
-        }
-
+        vender();
     }//GEN-LAST:event_jButtonVenderActionPerformed
 
     private void jTextFieldCedulaKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldCedulaKeyPressed
@@ -620,6 +590,8 @@ public final class Ventas extends javax.swing.JFrame {
     private void jTextFieldCodigoKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldCodigoKeyPressed
         if (!Validaciones.validarEnter(evt)) {
             producto();
+        }else if ((evt.getKeyCode() == 71) && (evt.getModifiers() & KeyEvent.CTRL_MASK) != 0) {
+            vender();
         }
     }//GEN-LAST:event_jTextFieldCodigoKeyPressed
 
@@ -642,13 +614,25 @@ public final class Ventas extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jTableVentaKeyReleased
 
-    private void jTextFieldCodigoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldCodigoActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jTextFieldCodigoActionPerformed
+    public void vender() {
+        new FormaPago(this, true).setVisible(true);
+        if (FormaPago.m) {
+            int m = JOptionPane.showConfirmDialog(null, "¿Desea imprimir Factura?", "Venta Exitosa", JOptionPane.YES_NO_OPTION);
+            if (m == 0) {
+                imprimir1();
+            }
+            total = 0;
+            jTextFieldCedula.setText("");
+            jTextFieldNombre.setText("");
+            jTextFieldTotal.setText("0");
+            limpiar();
+            nroVenta();
 
-    private void formKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_formKeyPressed
-        
-    }//GEN-LAST:event_formKeyPressed
+            Administrador.VentaDia();
+            Administrador.VentaMes();
+            Administrador.VentaSemana();
+        }
+    }
 
     public static void total() {
         total = 0;
