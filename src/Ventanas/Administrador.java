@@ -26,8 +26,9 @@ import java.util.GregorianCalendar;
  */
 public final class Administrador extends javax.swing.JFrame {
 
-
+    public static boolean m;
     public Administrador() {
+        m=true;
         Fondo fondo = new Fondo("FondoMenu.jpg");
         this.setContentPane(fondo);
         this.setUndecorated(true);
