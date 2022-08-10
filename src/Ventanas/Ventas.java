@@ -270,6 +270,11 @@ public final class Ventas extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setSize(new java.awt.Dimension(1000, 600));
+        addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                formKeyPressed(evt);
+            }
+        });
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(255, 255, 255));
@@ -615,8 +620,6 @@ public final class Ventas extends javax.swing.JFrame {
     private void jTextFieldCodigoKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldCodigoKeyPressed
         if (!Validaciones.validarEnter(evt)) {
             producto();
-        }else if(evt.getKeyCode()==KeyEvent.VK_CONTROL && evt.getKeyCode()==KeyEvent.VK_F6){
-            jLabel9.setText("Servicios");
         }
     }//GEN-LAST:event_jTextFieldCodigoKeyPressed
 
@@ -642,6 +645,10 @@ public final class Ventas extends javax.swing.JFrame {
     private void jTextFieldCodigoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldCodigoActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextFieldCodigoActionPerformed
+
+    private void formKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_formKeyPressed
+        
+    }//GEN-LAST:event_formKeyPressed
 
     public static void total() {
         total = 0;
@@ -696,48 +703,6 @@ public final class Ventas extends javax.swing.JFrame {
         }
     }
 
-    public void servicio(){
-        DefaultTableModel tabla = (DefaultTableModel) jTableVenta.getModel();
-        try {
-            String codigo = jTextFieldCodigo.getText().trim();
-            Connection cnn = Conexion.Conexion();
-            PreparedStatement pre = cnn.prepareStatement("select codigo,producto,precio_venta from producto where codigo = '" + codigo + "' or codigo_barras = '" + codigo + "'");
-            ResultSet rs = pre.executeQuery();
-            if (rs.next()) {
-                int i = tabla(rs.getString(1));
-                if (i >= 0) {
-                    int cant = Integer.parseInt(jTableVenta.getValueAt(i, 3).toString());
-                    int precio = Integer.parseInt(jTableVenta.getValueAt(i, 2).toString());
-                    cant++;
-                    int totalV = precio * cant;
-                    jTableVenta.setValueAt(cant, i, 3);
-                    jTableVenta.setValueAt(totalV, i, 4);
-                    utilidaTotal.set(i, Utilidad.utilidad(codigo) * cant);
-                    System.out.println(utilidaTotal);
-                    total();
-                } else {
-                    String[] datos = new String[5];
-                    datos[0] = rs.getString(1);
-                    datos[1] = rs.getString(2);
-                    datos[2] = String.valueOf(rs.getInt(3));
-                    datos[3] = "1";
-                    datos[4] = String.valueOf(rs.getInt(3));
-                    tabla.addRow(datos);
-                    Object obg = Utilidad.utilidad(codigo);
-                    utilidaTotal.add(obg);
-                    System.out.println(utilidaTotal);
-                    total();
-                }
-                jTextFieldCodigo.setText("");
-            } else {
-                m = true;
-                new Catalogo().setVisible(true);
-            }
-
-        } catch (SQLException e) {
-            System.err.println(e);
-        }
-    }
     public void buscarcl() {
         if (!jTextFieldCedula.getText().equals("")) {
             try {
