@@ -15,6 +15,7 @@ import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 import java.awt.Image;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -315,7 +316,7 @@ public final class Ventas extends javax.swing.JFrame {
         jLabel9.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jLabel9.setForeground(new java.awt.Color(255, 255, 255));
         jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        jLabel9.setText("Codigo:");
+        jLabel9.setText("Productos:");
 
         jTextFieldTotal.setEditable(false);
         jTextFieldTotal.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
@@ -442,10 +443,12 @@ public final class Ventas extends javax.swing.JFrame {
                                         .addComponent(jLabelRegresar1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(jLabelImprimir, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addGroup(layout.createSequentialGroup()
-                                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(10, 10, 10)
+                                        .addContainerGap()
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(jLabel9))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                             .addGroup(layout.createSequentialGroup()
                                                 .addGap(187, 187, 187)
@@ -466,7 +469,7 @@ public final class Ventas extends javax.swing.JFrame {
                                                     .addComponent(jButtonVender, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE))))))
                                 .addGap(35, 35, 35)))
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 466, Short.MAX_VALUE)
+                            .addComponent(jScrollPane2)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel13)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -612,7 +615,8 @@ public final class Ventas extends javax.swing.JFrame {
     private void jTextFieldCodigoKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldCodigoKeyPressed
         if (!Validaciones.validarEnter(evt)) {
             producto();
-
+        }else if(evt.getKeyCode()==KeyEvent.VK_CONTROL && evt.getKeyCode()==KeyEvent.VK_F6){
+            jLabel9.setText("Servicios");
         }
     }//GEN-LAST:event_jTextFieldCodigoKeyPressed
 
@@ -692,6 +696,48 @@ public final class Ventas extends javax.swing.JFrame {
         }
     }
 
+    public void servicio(){
+        DefaultTableModel tabla = (DefaultTableModel) jTableVenta.getModel();
+        try {
+            String codigo = jTextFieldCodigo.getText().trim();
+            Connection cnn = Conexion.Conexion();
+            PreparedStatement pre = cnn.prepareStatement("select codigo,producto,precio_venta from producto where codigo = '" + codigo + "' or codigo_barras = '" + codigo + "'");
+            ResultSet rs = pre.executeQuery();
+            if (rs.next()) {
+                int i = tabla(rs.getString(1));
+                if (i >= 0) {
+                    int cant = Integer.parseInt(jTableVenta.getValueAt(i, 3).toString());
+                    int precio = Integer.parseInt(jTableVenta.getValueAt(i, 2).toString());
+                    cant++;
+                    int totalV = precio * cant;
+                    jTableVenta.setValueAt(cant, i, 3);
+                    jTableVenta.setValueAt(totalV, i, 4);
+                    utilidaTotal.set(i, Utilidad.utilidad(codigo) * cant);
+                    System.out.println(utilidaTotal);
+                    total();
+                } else {
+                    String[] datos = new String[5];
+                    datos[0] = rs.getString(1);
+                    datos[1] = rs.getString(2);
+                    datos[2] = String.valueOf(rs.getInt(3));
+                    datos[3] = "1";
+                    datos[4] = String.valueOf(rs.getInt(3));
+                    tabla.addRow(datos);
+                    Object obg = Utilidad.utilidad(codigo);
+                    utilidaTotal.add(obg);
+                    System.out.println(utilidaTotal);
+                    total();
+                }
+                jTextFieldCodigo.setText("");
+            } else {
+                m = true;
+                new Catalogo().setVisible(true);
+            }
+
+        } catch (SQLException e) {
+            System.err.println(e);
+        }
+    }
     public void buscarcl() {
         if (!jTextFieldCedula.getText().equals("")) {
             try {
