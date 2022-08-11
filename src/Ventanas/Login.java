@@ -226,7 +226,7 @@ public class Login extends javax.swing.JFrame {
     private void jLabelCerrarPrograma1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabelCerrarPrograma1MouseClicked
         int i = JOptionPane.showConfirmDialog(null, "¿Cerrar Programa?", "Cerrar Programa", JOptionPane.YES_NO_OPTION);
         if (i == 0) {
-            this.dispose();
+            System.exit(0);
         }
     }//GEN-LAST:event_jLabelCerrarPrograma1MouseClicked
     public void iniciarsesion() {

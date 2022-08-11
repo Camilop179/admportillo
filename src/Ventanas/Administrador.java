@@ -527,6 +527,7 @@ public final class Administrador extends javax.swing.JFrame {
     private void jLabelCerrarSesionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabelCerrarSesionMouseClicked
         int i = JOptionPane.showConfirmDialog(null, "¿Esta seguro de Salir?", "Cerrar Sesion", JOptionPane.YES_NO_OPTION);
         if (i == 0) {
+            m=false;
             this.dispose();
             new Login().setVisible(true);
         }
@@ -574,7 +575,8 @@ public final class Administrador extends javax.swing.JFrame {
         Object[] opc = new Object[]{"SI", "NO"};
         int i = JOptionPane.showOptionDialog(null, "¿Desea salir?", "salir", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, opc, opc[0]);
         if (i == 0) {
-            this.dispose();
+            m=false;
+            System.exit(0);
         }
     }//GEN-LAST:event_JBotonCerrarActionPerformed
 

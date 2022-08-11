@@ -8,6 +8,7 @@ import Clases.Hash;
 import Clases.Conexion;
 import Clases.Fechas;
 import Clases.Fondo;
+import java.awt.HeadlessException;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.Connection;
@@ -370,7 +371,6 @@ public class Usuario extends javax.swing.JFrame {
         i = jTableUsuarios.getSelectedRow();
         jButton2.setVisible(true);
         jButton3.setVisible(true);
-        String id = jTableUsuarios.getValueAt(i, 0).toString();
         String usuario = jTableUsuarios.getValueAt(i, 1).toString();
         String contraseña = jTableUsuarios.getValueAt(i, 2).toString();
         String nombre = jTableUsuarios.getValueAt(i, 3).toString();
@@ -452,14 +452,14 @@ public class Usuario extends javax.swing.JFrame {
                 pre.setString(2, jTextFieldUsuario.getText());
                 pre.setString(3, Hash.hash24(jTextFieldContraseña.getText()));
                 pre.setString(4, jTextFieldNombre.getText());
-                pre.setString(6, jComboBoxCargo.getSelectedItem().toString());
-                pre.setString(7, jTextFieldCedula.getText());
-                pre.setString(8, jTextFieldCelular.getText());
-                pre.setString(9, jTextFieldCorrea.getText());
+                pre.setString(5, jComboBoxCargo.getSelectedItem().toString());
+                pre.setString(6, jTextFieldCedula.getText());
+                pre.setString(7, jTextFieldCelular.getText());
+                pre.setString(8, jTextFieldCorrea.getText());
 
                 pre.executeUpdate();
                 JOptionPane.showMessageDialog(null, "Registro exitoso");
-            } catch (Exception e) {
+            } catch (HeadlessException | SQLException e) {
                 System.err.println("Error al ingresar el producto " + e);
                 JOptionPane.showMessageDialog(null, "¡Error al ingresar el producto!. Contacte al soporte Corporacion Portillo.");
             }

@@ -6,7 +6,9 @@ import Clases.TablaFondo;
 import Clases.Fondo;
 import Clases.Validaciones;
 import java.awt.HeadlessException;
+import java.math.BigInteger;
 import java.sql.*;
+import java.text.DecimalFormat;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
@@ -44,13 +46,17 @@ public final class Catalogo extends javax.swing.JFrame {
      * Sacar el Total en Productos
      */
     public static void total() {
-        double t = 0;
+        int t = 0;
         double n;
         for (int i = 0; i < Table.getRowCount(); i++) {
-            n = Double.parseDouble(Table.getValueAt(i, 4).toString()) * Double.parseDouble(Table.getValueAt(i, 6).toString());
+            n = Double.parseDouble(Table.getValueAt(i, 4).toString().replace(",", "")) * Double.parseDouble(Table.getValueAt(i, 6).toString().replace(",", ""));
             t += n;
         }
-        jTextFieldTotal.setText("$" + t);
+        BigInteger big = BigInteger.valueOf(t);
+
+        DecimalFormat dm = new DecimalFormat("###,###");
+
+        jTextFieldTotal.setText("$" + dm.format(big));
     }
 
     /**
@@ -72,6 +78,10 @@ public final class Catalogo extends javax.swing.JFrame {
                 for (int i = 0; i < 16; i++) {
                     datos[i] = rs.getString(i + 1);
                 }
+                DecimalFormat dm = new DecimalFormat("###,###");
+                datos[4] = dm.format(BigInteger.valueOf(rs.getInt(5)));
+                datos[5] = dm.format(Double.parseDouble(datos[5]));
+                datos[7] = dm.format(Double.parseDouble(datos[7]));
 
                 tabla.addRow(datos);
             }
@@ -325,7 +335,9 @@ public final class Catalogo extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jLabelNPMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabelNPMouseClicked
-        new Producto().setVisible(true);
+        if (Administrador.m) {
+            new Producto().setVisible(true);
+        }
     }//GEN-LAST:event_jLabelNPMouseClicked
 
     private void jTextFieldBusquedaKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldBusquedaKeyReleased
