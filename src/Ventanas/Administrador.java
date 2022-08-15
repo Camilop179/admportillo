@@ -9,6 +9,8 @@ import javax.swing.JOptionPane;
 import Clases.Conexion;
 import Clases.Fechas;
 import Clases.ImagenBoton;
+import Clases.TotalVentas;
+import Clases.Utilidad;
 import java.awt.Shape;
 import java.awt.geom.RoundRectangle2D;
 import java.sql.*;
@@ -51,15 +53,16 @@ public final class Administrador extends javax.swing.JFrame {
         new Imagenes("Administrador.png", jLabelAdministrador);
         new Imagenes("icons8_agregar_usuario.png", jLabelAgregarUsuario);
 
-        VentaDia();
-        VentaSemana();
-        VentaMes();
+        
         invisible();
-
         cerra();
-
+        ventas();
     }
-
+    public static void ventas(){
+        jLabelVentasHoy.setText(TotalVentas.VentaDia());
+        jLabelVentaSemana.setText(TotalVentas.VentaSemana());
+        VentaMEs.setText(TotalVentas.VentaMes());
+    }
     public void cerra() {
 
         try {
@@ -96,136 +99,7 @@ public final class Administrador extends javax.swing.JFrame {
         jLabelAgregarUsuario.setVisible(false);
     }
 
-    public static void VentaDia() {
-
-        DecimalFormat formatea = new DecimalFormat("###,###");
-        double venta_dia = 0;
-        Date fecha_actual = Fechas.fechaActualDate();
-
-        try {
-            Connection cnn = Conexion.Conexion();
-            PreparedStatement pre = cnn.prepareStatement("select precio_Total from ventas Where fecha = ?");
-            pre.setDate(1, new java.sql.Date(fecha_actual.getTime()));
-            ResultSet rs = pre.executeQuery();
-            if (rs.next()) {
-                do {
-                    venta_dia += rs.getDouble(1);
-
-                    jLabelVentasHoy.setText("$" + formatea.format(venta_dia));
-                } while (rs.next());
-            } else {
-                jLabelVentasHoy.setText("$0");
-            }
-
-        } catch (SQLException e) {
-            System.err.println(e);
-        }
-    }
-
-    public static void VentaMes() {
-
-        ZoneId defaultZoneId = ZoneId.systemDefault();
-        DecimalFormat formatea = new DecimalFormat("###,###");
-        double venta_dia = 0;
-        Date fecha_actual = Fechas.fechaActualDate();
-        GregorianCalendar semana = new GregorianCalendar();
-        semana.setTime(fecha_actual);
-        Month mes = LocalDate.now().getMonth();
-        LocalDate fecha_semana = LocalDate.of(LocalDate.now().getYear(), mes, 1);
-        java.util.Date fecha_sem = Date.from(fecha_semana.atStartOfDay(defaultZoneId).toInstant());
-        java.sql.Date bd_fecha = new java.sql.Date(fecha_sem.getTime());
-
-        try {
-            Connection cnn = Conexion.Conexion();
-            PreparedStatement pre = cnn.prepareStatement("select precio_Total from ventas Where fecha BETWEEN ? and ?");
-            pre.setDate(1, bd_fecha);
-            pre.setDate(2, new java.sql.Date(fecha_actual.getTime()));
-            ResultSet rs = pre.executeQuery();
-
-            if (rs.next()) {
-                do {
-                    venta_dia += rs.getDouble(1);
-
-                    VentaMEs.setText("$" + formatea.format(venta_dia));
-                } while (rs.next());
-            } else {
-                VentaMEs.setText("$0");
-            }
-
-        } catch (SQLException e) {
-            System.err.println(e);
-        }
-    }
-
-    public static void VentaSemana() {
-
-        Date fecha_actual = Fechas.fechaActualDate();
-        GregorianCalendar gc = new GregorianCalendar();
-        gc.setTime(fecha_actual);
-        LocalDate fecha_semana;
-        int i = gc.get(Calendar.DAY_OF_WEEK);
-        switch (i) {
-            case 1:
-                fecha_semana = LocalDate.now().minusDays(6);
-                dia_semana(fecha_actual, fecha_semana);
-                break;
-            case 2:
-                fecha_semana = LocalDate.now().minusDays(0);
-                dia_semana(fecha_actual, fecha_semana);
-                break;
-            case 3:
-                fecha_semana = LocalDate.now().minusDays(1);
-                dia_semana(fecha_actual, fecha_semana);
-            case 4:
-                fecha_semana = LocalDate.now().minusDays(2);
-                dia_semana(fecha_actual, fecha_semana);
-                break;
-            case 5:
-                fecha_semana = LocalDate.now().minusDays(3);
-                dia_semana(fecha_actual, fecha_semana);
-                break;
-            case 6:
-                fecha_semana = LocalDate.now().minusDays(4);
-                dia_semana(fecha_actual, fecha_semana);
-                break;
-            case 7:
-                fecha_semana = LocalDate.now().minusDays(5);
-                dia_semana(fecha_actual, fecha_semana);
-                break;
-
-        }
-
-    }
-
-    public static void dia_semana(Date fecha_actual, LocalDate fecha_semana) {
-        ZoneId defaultZoneId = ZoneId.systemDefault();
-        DecimalFormat formatea = new DecimalFormat("###,###");
-        double venta_dia = 0;
-        java.util.Date fecha_sem = Date.from(fecha_semana.atStartOfDay(defaultZoneId).toInstant());
-        java.sql.Date bd_fecha = new java.sql.Date(fecha_sem.getTime());
-
-        try {
-            Connection cnn = Conexion.Conexion();
-            PreparedStatement pre = cnn.prepareStatement("select precio_Total from ventas Where fecha BETWEEN ? and ?");
-            pre.setDate(2, new java.sql.Date(fecha_actual.getTime()));
-            pre.setDate(1, bd_fecha);
-            ResultSet rs = pre.executeQuery();
-
-            if (rs.next()) {
-                do {
-                    venta_dia += rs.getDouble(1);
-
-                    jLabelVentaSemana.setText("$" + formatea.format(venta_dia));
-                } while (rs.next());
-            } else {
-                jLabelVentaSemana.setText("$0");
-            }
-
-        } catch (SQLException e) {
-            System.err.println(e);
-        }
-    }
-
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

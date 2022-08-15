@@ -37,7 +37,6 @@ public final class Catalogo extends javax.swing.JFrame {
 
         inventario();
         total();
-
     }
 
     /**
@@ -45,16 +44,13 @@ public final class Catalogo extends javax.swing.JFrame {
      */
     public static void total() {
         int t = 0;
-        double n;
         for (int i = 0; i < Table.getRowCount(); i++) {
-            n = Double.parseDouble(Table.getValueAt(i, 4).toString().replace(",", "")) * Double.parseDouble(Table.getValueAt(i, 6).toString().replace(",", ""));
-            t += n;
+            t += Double.parseDouble(Table.getValueAt(i,5).toString());
         }
-        BigInteger big = BigInteger.valueOf(t);
 
         DecimalFormat dm = new DecimalFormat("###,###");
 
-        jTextFieldTotal.setText("$" + dm.format(big));
+        jTextFieldTotal.setText("$" + dm.format(t));
     }
 
     /**
@@ -63,33 +59,45 @@ public final class Catalogo extends javax.swing.JFrame {
     public static void inventario() {
         DefaultTableModel tabla = tabla();
 
-        String[] datos = new String[16];
+        String[] datos = new String[17];
         try {
             Connection cnn = Conexion.Conexion();
 
             PreparedStatement pre = cnn.prepareStatement("select p.idProducto,p.codigo,p.codigo_barras,p.producto,p.precio_compra"
-                    + ",p.precio_venta,p.cantidad,p.utilidad,p.porcentaje_utilidad,p.tipo,p.seccion"
+                    + ",total_cost,p.precio_venta,p.cantidad,p.utilidad,p.porcentaje_utilidad,p.tipo,p.seccion"
                     + ",p.marca,p.proveedor,u.nombre,p.fecha_ingreso,p.fecha_vencimiento from producto p left join usuarios u on p.idUsuario = u.idusuarios");
             ResultSet rs = pre.executeQuery();
 
             while (rs.next()) {
-                for (int i = 0; i < 16; i++) {
+                for (int i = 0; i < 17; i++) {
                     datos[i] = rs.getString(i + 1);
                 }
-                DecimalFormat dm = new DecimalFormat("###,###");
-                datos[4] = dm.format(BigInteger.valueOf(rs.getInt(5)));
-                datos[5] = dm.format(Double.parseDouble(datos[5]));
-                datos[7] = dm.format(Double.parseDouble(datos[7]));
-
                 tabla.addRow(datos);
             }
 
         } catch (SQLException e) {
             System.err.println(e);
         }
+        
 
     }
-
+    public static void total_bd(){
+        for(int i=0;i<Table.getRowCount();i++){
+            double cost = Double.parseDouble(Table.getValueAt(i, 4).toString());
+            int cant = Integer.parseInt(Table.getValueAt(i, 7).toString());
+            
+            double total = cost*cant;
+            
+            try (Connection cn = Conexion.Conexion()){
+                PreparedStatement ps = cn.prepareStatement("update producto set total_cost=? where idProducto=?");
+                ps.setDouble(1, total);
+                ps.setInt(2, Integer.parseInt(Table.getValueAt(i, 0).toString()));
+                ps.executeUpdate();
+            } catch (Exception e) {
+                System.out.println(e);
+            }
+        }
+    }
     public static DefaultTableModel tabla() {
         DefaultTableModel tabla = new DefaultTableModel() {
             @Override
@@ -102,6 +110,7 @@ public final class Catalogo extends javax.swing.JFrame {
         tabla.addColumn("Codigo Barra");
         tabla.addColumn("Producto");
         tabla.addColumn("Precio Costo");
+        tabla.addColumn("Total");
         tabla.addColumn("Precio Venta");
         tabla.addColumn("Cantidad");
         tabla.addColumn("Utilidad");
@@ -339,6 +348,8 @@ public final class Catalogo extends javax.swing.JFrame {
     }//GEN-LAST:event_jLabelNPMouseClicked
 
     private void jTextFieldBusquedaKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldBusquedaKeyReleased
+        
+        total_bd();
         boolean codigo = jCheckBoxCodigo.isSelected();
         boolean codigoBarra = jCheckBoxCodigo_Barra.isSelected();
         boolean nombre = jCheckBoxNombre.isSelected();

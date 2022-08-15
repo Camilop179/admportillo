@@ -24,6 +24,7 @@ public class FormaPago extends javax.swing.JDialog {
      */
     public FormaPago(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
+        m = true;
         Fondo fondo = new Fondo("Fondo_Dialogos.jpg");
         this.setContentPane(fondo);
         this.setUndecorated(true);
@@ -34,6 +35,9 @@ public class FormaPago extends javax.swing.JDialog {
         new Imagenes("efectivo.png", jLabelEfectivo);
         new Imagenes("tarjeta-de-debito.png", jLabelCredito);
         new Imagenes("codigo-qr.png", jLabelQr);
+        jTextFieldCambio.setText("0");
+        jTextFieldEfectivo.setText("0");
+        jTextFieldEfectivo.requestFocus();
         setTitle("Forma de Pago");
         setResizable(false);
         setLocationRelativeTo(null);
@@ -202,11 +206,11 @@ public class FormaPago extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void efectivoMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_efectivoMouseEntered
-efectivo.setBackground(Color.green);
+        efectivo.setBackground(Color.green);
     }//GEN-LAST:event_efectivoMouseEntered
 
     private void efectivoMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_efectivoMouseExited
-efectivo.setBackground(new Color(78,80,82));
+        efectivo.setBackground(new Color(78, 80, 82));
     }//GEN-LAST:event_efectivoMouseExited
 
     private void creditoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_creditoActionPerformed
@@ -216,57 +220,57 @@ efectivo.setBackground(new Color(78,80,82));
     }//GEN-LAST:event_creditoActionPerformed
 
     private void creditoMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_creditoMouseEntered
-   credito.setBackground(Color.green);
+        credito.setBackground(Color.green);
     }//GEN-LAST:event_creditoMouseEntered
 
     private void creditoMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_creditoMouseExited
-credito.setBackground(new Color(78,80,82));        // TODO add your handling code here:
+        credito.setBackground(new Color(78, 80, 82));        // TODO add your handling code here:
     }//GEN-LAST:event_creditoMouseExited
 
     private void QRMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_QRMouseEntered
-QR.setBackground(Color.green);        // TODO add your handling code here:
+        QR.setBackground(Color.green);        // TODO add your handling code here:
     }//GEN-LAST:event_QRMouseEntered
 
     private void QRMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_QRMouseExited
-    QR.setBackground(new Color(78,80,82));
+        QR.setBackground(new Color(78, 80, 82));
     }//GEN-LAST:event_QRMouseExited
 
     private void efectivoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_efectivoActionPerformed
         double cambio = Double.parseDouble(jTextFieldCambio.getText());
         double efecty = Double.parseDouble(jTextFieldEfectivo.getText());
-        Ventas.venta("Efectivo",cambio,efecty);
+        Ventas.venta("Efectivo", cambio, efecty);
         Ventas.detalleVenta();
         dispose();
     }//GEN-LAST:event_efectivoActionPerformed
 
     private void QRActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_QRActionPerformed
-       Ventas.venta("Pago Qr", Double.parseDouble(jTextFieldCambio.getText()), Double.parseDouble(jTextFieldEfectivo.getText()));
+        Ventas.venta("Pago Qr", Double.parseDouble(jTextFieldCambio.getText()), Double.parseDouble(jTextFieldEfectivo.getText()));
         Ventas.detalleVenta();
         dispose();
     }//GEN-LAST:event_QRActionPerformed
-public static boolean m=true;
+    public static boolean m = true;
     private void JBotonCerrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_JBotonCerrarActionPerformed
         Object[] opc = new Object[]{"SI", "NO"};
         int i = JOptionPane.showOptionDialog(null, "¿Desea cancelar la Venta?", "salir", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, opc, opc[0]);
         if (i == 0) {
-            m=false;
+            m = false;
             this.dispose();
         }
     }//GEN-LAST:event_JBotonCerrarActionPerformed
 
     private void jTextFieldEfectivoKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldEfectivoKeyReleased
-         if (!Validaciones.validarString(evt)){
-           double efectivo = Double.parseDouble(jTextFieldEfectivo.getText());
-           double total = Double.parseDouble(Ventas.jTextFieldTotal.getText());
-           jTextFieldCambio.setText(""+(efectivo-total));
-       }else {
-           getToolkit().beep();
+        if (!"".equals(jTextFieldEfectivo.getText())&&!Validaciones.validarString(evt)) {
+            double efectiv;
+            efectiv = Double.parseDouble(jTextFieldEfectivo.getText());
+            double total = Double.parseDouble(Ventas.jTextFieldTotal.getText().replace(",", ""));
+            jTextFieldCambio.setText("" + (efectiv - total));
+        } else {
+            getToolkit().beep();
             evt.consume();
-       }
+        }
     }//GEN-LAST:event_jTextFieldEfectivoKeyReleased
 
-  
-  
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton JBotonCerrar;
     private javax.swing.JButton QR;

@@ -18,6 +18,7 @@ import java.awt.Image;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.text.DecimalFormat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,7 +60,7 @@ public final class Ventas extends javax.swing.JFrame {
         Icon icono = new ImageIcon(imagen1.getImage().getScaledInstance(45, 45, Image.SCALE_DEFAULT));
         jLabelFecha.setText(Fechas.fechaActual());
         this.setLocationRelativeTo(null);
-        m=true;
+        m = true;
         if (Reportes.m == 1) {
             jLabelImprimir.setVisible(true);
             jLabelNoVenta.setText("" + Reportes.nro);
@@ -84,7 +85,7 @@ public final class Ventas extends javax.swing.JFrame {
 
                     Object[] opc = new Object[]{"SI", "NO"};
                     int i = JOptionPane.showOptionDialog(null, "Desea Cancelar Venta?", "Salir de Ventas", JOptionPane.DEFAULT_OPTION,
-                            JOptionPane.QUESTION_MESSAGE,null,opc,opc[0]);
+                            JOptionPane.QUESTION_MESSAGE, null, opc, opc[0]);
                     if (i == 0) {
                         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                         m = false;
@@ -516,7 +517,18 @@ public final class Ventas extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButtonVenderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonVenderActionPerformed
-        vender();
+        System.out.println(jTableVenta.getRowCount());
+        if (jTableVenta.getRowCount() != 0) {
+            vender();
+            jTextFieldCedula.setText("");
+            jTextFieldNombre.setText("");
+            jTextFieldTotal.setText("0");
+            limpiar();
+            utilidaTotal.clear();
+            nroVenta();
+        } else {
+            JOptionPane.showMessageDialog(this, "No hay Productos Para Venta");
+        }
     }//GEN-LAST:event_jButtonVenderActionPerformed
 
     private void jTextFieldCedulaKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldCedulaKeyPressed
@@ -590,7 +602,7 @@ public final class Ventas extends javax.swing.JFrame {
     private void jTextFieldCodigoKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldCodigoKeyPressed
         if (!Validaciones.validarEnter(evt)) {
             producto();
-        }else if ((evt.getKeyCode() == 71) && (evt.getModifiers() & KeyEvent.CTRL_MASK) != 0) {
+        } else if ((evt.getKeyCode() == 71) && (evt.getModifiers() & KeyEvent.CTRL_MASK) != 0) {
             vender();
         }
     }//GEN-LAST:event_jTextFieldCodigoKeyPressed
@@ -617,33 +629,22 @@ public final class Ventas extends javax.swing.JFrame {
     public void vender() {
         new FormaPago(this, true).setVisible(true);
         if (FormaPago.m) {
-            int m = JOptionPane.showConfirmDialog(null, "¿Desea imprimir Factura?", "Venta Exitosa", JOptionPane.YES_NO_OPTION);
-            if (m == 0) {
+            int n = JOptionPane.showConfirmDialog(null, "¿Desea imprimir Factura?", "Venta Exitosa", JOptionPane.YES_NO_OPTION);
+            if (n == 0) {
                 imprimir1();
             }
-            total = 0;
-            jTextFieldCedula.setText("");
-            jTextFieldNombre.setText("");
-            jTextFieldTotal.setText("0");
-            limpiar();
-            utilidaTotal.clear();
-            System.out.println(utilidaTotal);
-            nroVenta();
 
-            Administrador.VentaDia();
-            Administrador.VentaMes();
-            Administrador.VentaSemana();
+            Administrador.ventas();
         }
     }
 
     public static void total() {
-        total = 0;
-        int t = 0;
+
+        int t=0;
         for (int i = 0; i < jTableVenta.getRowCount(); i++) {
-            t = Integer.parseInt(jTableVenta.getValueAt(i, 4).toString());
-            total += t;
+            t += Integer.parseInt(jTableVenta.getValueAt(i, 4).toString().replace(",", ""));
         }
-        jTextFieldTotal.setText("" + total);
+        jTextFieldTotal.setText(""+t);
     }
 
     public static void producto() {
@@ -657,7 +658,7 @@ public final class Ventas extends javax.swing.JFrame {
                 int i = tabla(rs.getString(1));
                 if (i >= 0) {
                     int cant = Integer.parseInt(jTableVenta.getValueAt(i, 3).toString());
-                    int precio = Integer.parseInt(jTableVenta.getValueAt(i, 2).toString());
+                    int precio = Integer.parseInt(jTableVenta.getValueAt(i, 2).toString().replace("\\D+", ""));
                     cant++;
                     int totalV = precio * cant;
                     jTableVenta.setValueAt(cant, i, 3);
@@ -691,11 +692,11 @@ public final class Ventas extends javax.swing.JFrame {
 
     public void buscarcl() {
         if (!jTextFieldCedula.getText().equals("")) {
-            try {
+            try (Connection cn = Conexion.Conexion()){
 
                 String cedula = jTextFieldCedula.getText();
-                Connection cn = Conexion.Conexion();
-                PreparedStatement pr = cn.prepareStatement("select nombres from clientes where cedula = " + cedula + "");
+                PreparedStatement pr = cn.prepareStatement("select nombres from clientes where cedula = ?");
+                pr.setString(1, cedula);
                 ResultSet rs = pr.executeQuery();
                 if (rs.next()) {
                     String nombre = rs.getString(1);
@@ -715,15 +716,13 @@ public final class Ventas extends javax.swing.JFrame {
                         buscarcl();
                     }
                 }
-
-                cn.close();
             } catch (SQLException e) {
                 System.out.println(e);
             }
         }
     }
 
-    public void limpiar() {
+    public static void limpiar() {
         DefaultTableModel tabla = (DefaultTableModel) jTableVenta.getModel();
         for (int i = 0; i < jTableVenta.getRowCount(); i++) {
             tabla.removeRow(i);
@@ -749,10 +748,10 @@ public final class Ventas extends javax.swing.JFrame {
                 pr.setInt(6, Integer.parseInt(jTableVenta.getValueAt(i, 3).toString()));
                 pr.setDouble(7, (double) utilidaTotal.get(i));
                 pr.setDouble(8, Double.parseDouble(jTableVenta.getValueAt(i, 4).toString()));
+                pr.executeUpdate();
                 String codigo = jTableVenta.getValueAt(i, 0).toString();
                 int cantidad = Integer.parseInt(jTableVenta.getValueAt(i, 3).toString());
                 ActualizarCantidad.restar(cantidad, codigo);
-                pr.executeUpdate();
             }
 
         } catch (SQLException e) {
@@ -799,7 +798,6 @@ public final class Ventas extends javax.swing.JFrame {
         double totald = Double.parseDouble(jTableVenta.getValueAt(row, 4).toString());
         total -= totald;
         jTextFieldTotal.setText("" + total);
-        double util = Utilidad.utilidad(jTableVenta.getValueAt(row, 0).toString());
         utilidaTotal.remove(row);
         tabla.removeRow(jTableVenta.getSelectedRow());
     }

@@ -8,26 +8,24 @@ import Clases.Conexion;
 import Clases.Fechas;
 import Clases.Fondo;
 import Clases.ImagenBoton;
-import Clases.Utilidad;
+import Clases.TotalVentas;
 import Clases.Validaciones;
-import static Ventanas.Ventas.jLabelNoVenta;
 import java.awt.Color;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.JFrame;
 
@@ -92,8 +90,27 @@ public final class Reportes extends javax.swing.JFrame {
         b = false;
         tabla(jTableDevengado);
         tabla(jTableDeduccion);
+        total_inventario();
+        jTextFieldTotalInv.setEditable(false);
+        ventas();
     }
-
+    public void ventas(){
+        jTextFieldVentaDia.setText(TotalVentas.VentaDia());
+        jTextField5.setText(TotalVentas.VentaMes());
+    }
+    public void total_inventario(){
+        try (Connection cn = Conexion.Conexion()){
+            double total=0;
+            PreparedStatement ps = cn.prepareStatement("select total_cost from producto");
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                total += rs.getDouble(1);
+            }
+            DecimalFormat dm = new DecimalFormat("###,###");
+            jTextFieldTotalInv.setText("$"+dm.format(total));
+        } catch (Exception e) {
+        }
+    }
     public void tabla(JTable j) {
         df = new DefaultTableModel();
         df.addColumn("Cedula");
@@ -344,7 +361,7 @@ public final class Reportes extends javax.swing.JFrame {
         jLabel47 = new javax.swing.JLabel();
         jTextTotalNomina = new javax.swing.JFormattedTextField();
         jPanel7 = new javax.swing.JPanel();
-        jPanel1 = new javax.swing.JPanel();
+        jPanel1 = new Fondo("FondoMenu.jpg");
         jButton3 = new javax.swing.JButton();
         jTextField1 = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
@@ -353,7 +370,7 @@ public final class Reportes extends javax.swing.JFrame {
         jLabel7 = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();
         jTextField3 = new javax.swing.JTextField();
-        jTextField4 = new javax.swing.JTextField();
+        jTextFieldTotalInv = new javax.swing.JTextField();
         jTextField5 = new javax.swing.JTextField();
         jTextField6 = new javax.swing.JTextField();
         jLabel9 = new javax.swing.JLabel();
@@ -361,7 +378,7 @@ public final class Reportes extends javax.swing.JFrame {
         jLabel10 = new javax.swing.JLabel();
         jTextField8 = new javax.swing.JTextField();
         jLabel11 = new javax.swing.JLabel();
-        jTextField9 = new javax.swing.JTextField();
+        jTextFieldVentaDia = new javax.swing.JTextField();
         jLabel12 = new javax.swing.JLabel();
         jTextField10 = new javax.swing.JTextField();
         jLabel13 = new javax.swing.JLabel();
@@ -492,6 +509,8 @@ public final class Reportes extends javax.swing.JFrame {
 
         jLabel2.setForeground(new java.awt.Color(255, 255, 255));
         jLabel2.setText("Total:");
+
+        jTextFieldTotalVenta.setEditable(false);
 
         jDateChooser1.setDateFormatString("y-MM-d");
 
@@ -1110,32 +1129,40 @@ public final class Reportes extends javax.swing.JFrame {
 
         jLabel8.setText("Rentabilidad de ventas:");
 
+        jTextField3.setEditable(false);
         jTextField3.setText("jTextField1");
 
-        jTextField4.setText("jTextField1");
+        jTextFieldTotalInv.setText("jTextField1");
 
+        jTextField5.setEditable(false);
         jTextField5.setText("jTextField1");
 
+        jTextField6.setEditable(false);
         jTextField6.setText("jTextField1");
 
         jLabel9.setText("Ventas Ultimo mes:");
 
+        jTextField7.setEditable(false);
         jTextField7.setText("jTextField1");
 
         jLabel10.setText("Rentabilidad Ultimo mes");
 
+        jTextField8.setEditable(false);
         jTextField8.setText("jTextField1");
 
         jLabel11.setText("Ventas Ultimo Dia :");
 
-        jTextField9.setText("jTextField1");
+        jTextFieldVentaDia.setEditable(false);
+        jTextFieldVentaDia.setText("jTextField1");
 
         jLabel12.setText("Rentabilidad Ultimo Dia:");
 
+        jTextField10.setEditable(false);
         jTextField10.setText("jTextField1");
 
         jLabel13.setText("0");
 
+        jTextField11.setEditable(false);
         jTextField11.setText("jTextField1");
 
         jLabel14.setText("Capital total:");
@@ -1145,6 +1172,7 @@ public final class Reportes extends javax.swing.JFrame {
 
         jLabel15.setText("Capital efectivo");
 
+        jTextField13.setEditable(false);
         jTextField13.setText("jTextField1");
 
         jLabel18.setText("jLabel16");
@@ -1179,10 +1207,10 @@ public final class Reportes extends javax.swing.JFrame {
                                 .addComponent(jLabel11, javax.swing.GroupLayout.Alignment.TRAILING)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jTextField4)
+                            .addComponent(jTextFieldTotalInv)
                             .addComponent(jTextField5)
                             .addComponent(jTextField7)
-                            .addComponent(jTextField9, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addComponent(jTextFieldVentaDia, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addGap(129, 129, 129)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
@@ -1229,7 +1257,7 @@ public final class Reportes extends javax.swing.JFrame {
                         .addGap(18, 18, 18)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jTextField4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jTextFieldTotalInv, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(18, 18, 18)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1237,7 +1265,7 @@ public final class Reportes extends javax.swing.JFrame {
                         .addGap(18, 18, 18)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jTextField9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jTextFieldVentaDia, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(18, 18, 18)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1486,7 +1514,7 @@ public final class Reportes extends javax.swing.JFrame {
             ProcessBuilder p = new ProcessBuilder();
             p.command("cmd.exe", disco_duro, ruta);
             p.start();
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.err.println(e);
         }
 
@@ -1506,7 +1534,8 @@ public final class Reportes extends javax.swing.JFrame {
             n = Double.parseDouble(tabla.getValueAt(i, columna).toString().replace(",", ""));
             t += n;
         }
-        total.setText("$" + t);
+        DecimalFormat dm = new DecimalFormat("###,###");
+        total.setText("$" + dm.format(t));
     }
 
     public void buscarT(String columna, int n) {
@@ -1659,20 +1688,20 @@ public final class Reportes extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField23;
     private javax.swing.JTextField jTextField24;
     private javax.swing.JTextField jTextField3;
-    private javax.swing.JTextField jTextField4;
     private javax.swing.JTextField jTextField5;
     private javax.swing.JTextField jTextField6;
     private javax.swing.JTextField jTextField7;
     private javax.swing.JTextField jTextField8;
-    private javax.swing.JTextField jTextField9;
     private javax.swing.JTextField jTextFieldBuscar;
     private javax.swing.JTextField jTextFieldCCN;
     private javax.swing.JTextField jTextFieldEmpleado;
     private javax.swing.JTextField jTextFieldNovedad;
     private javax.swing.JTextField jTextFieldNovedad1;
+    private javax.swing.JTextField jTextFieldTotalInv;
     private javax.swing.JTextField jTextFieldTotalVenta;
     private javax.swing.JTextField jTextFieldValor;
     private javax.swing.JTextField jTextFieldValor1;
+    private javax.swing.JTextField jTextFieldVentaDia;
     private javax.swing.JFormattedTextField jTextTotalNomina;
     // End of variables declaration//GEN-END:variables
 }

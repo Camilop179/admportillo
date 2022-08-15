@@ -384,7 +384,7 @@ public final class Producto extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addGap(10, 10, 10)
                 .addComponent(jLabelFecha)
-                .addGap(101, 101, 101)
+                .addGap(76, 76, 76)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jTextFieldProducto, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel3))
@@ -584,7 +584,7 @@ public void actualizar(int id){
                 Connection cn = Conexion.Conexion();
                 PreparedStatement pre = cn.prepareStatement("Update producto set codigo = ?, codigo_barras=?, producto=?, precio_compra=?, precio_venta=?, "
                         + "cantidad=?, utilidad=?, porcentaje_utilidad=?, tipo=?, seccion=?, marca=?, proveedor=?, idUsuario=?, fecha_ingreso=?,"
-                        + "fecha_vencimiento=? where idProducto=?");
+                        + "fecha_vencimiento=?,total_cost=? where idProducto=?");
              
                 pre.setString(1, codigo);
                 pre.setString(2, codigo_B);
@@ -601,7 +601,8 @@ public void actualizar(int id){
                 pre.setInt(13, Login.idUsuario);
                 pre.setDate(14, fecha_i_bd);
                 pre.setDate(15, fecha_v_bd);
-                pre.setInt(16, id);
+                pre.setDouble(16, (precio_C*cantidad));
+                pre.setInt(17, id);
 
                 pre.executeUpdate();
                 JOptionPane.showMessageDialog(null, "Actualizacion exitoso");
@@ -657,7 +658,7 @@ public void actualizar(int id){
                 Connection cn = Conexion.Conexion();
                 PreparedStatement pre = cn.prepareStatement("INSERT INTO producto (idProducto,codigo,codigo_barras,producto,cantidad,precio_compra,"
                         + "precio_venta,utilidad,porcentaje_utilidad,"
-                        + "idUsuario,fecha_ingreso,fecha_vencimiento,proveedor,marca,tipo,seccion) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                        + "idUsuario,fecha_ingreso,fecha_vencimiento,proveedor,marca,tipo,seccion,total_cost) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
                 pre.setInt(1, 0);
                 pre.setString(2, codigo);
                 pre.setString(3, codigo_B);
@@ -675,6 +676,7 @@ public void actualizar(int id){
                 pre.setString(14, marca);
                 pre.setString(15, tipo);
                 pre.setString(16, seccion);
+                pre.setDouble(17, precio_C*cantidad);
 
                 pre.executeUpdate();
                 JOptionPane.showMessageDialog(null, "Registro exitoso");
