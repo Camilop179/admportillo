@@ -101,7 +101,6 @@ public final class Ventas extends javax.swing.JFrame {
         if (Reportes.m == 1) {
             buscarDetalle();
             buscarVentas();
-
         }
     }
 

@@ -374,7 +374,7 @@ public final class Catalogo extends javax.swing.JFrame {
                     Producto.idp = id;
                 }
             }
-        } else {
+        } else if(Ventas.m) {
             cod = Table.getValueAt(i, 1).toString();
             Ventas.jTextFieldCodigo.setText(cod);
             this.dispose();

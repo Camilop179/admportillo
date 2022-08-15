@@ -274,7 +274,6 @@ public final class Reportes extends javax.swing.JFrame {
         jLabel3 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
-        jButton5 = new javax.swing.JButton();
         jPanel2 = new Fondo("FondoMenu.jpg");
         jLabel16 = new javax.swing.JLabel();
         jTextField14 = new javax.swing.JTextField();
@@ -515,13 +514,6 @@ public final class Reportes extends javax.swing.JFrame {
             }
         });
 
-        jButton5.setText("jButton5");
-        jButton5.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton5ActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
@@ -534,8 +526,6 @@ public final class Reportes extends javax.swing.JFrame {
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addGap(195, 195, 195)
                         .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jButton5)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -563,7 +553,7 @@ public final class Reportes extends javax.swing.JFrame {
                         .addComponent(jButton1))
                     .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addGap(18, 18, 18)
-                .addComponent(jScrollPane2)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 478, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel4Layout.createSequentialGroup()
@@ -572,9 +562,7 @@ public final class Reportes extends javax.swing.JFrame {
                             .addComponent(jTextFieldTotalVenta, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(27, 27, 27))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButton2)
-                            .addComponent(jButton5))
+                        .addComponent(jButton2)
                         .addGap(17, 17, 17))))
         );
 
@@ -1452,83 +1440,9 @@ public final class Reportes extends javax.swing.JFrame {
     private void jButtonBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonBuscarActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jButtonBuscarActionPerformed
+    
 
-    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-
-        try {
-
-            Connection cn = Conexion.Conexion();
-            PreparedStatement ps = cn.prepareStatement("select iddetallesVenta,codigo,precioUnitario,cantidad from detallesventa");
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                int id = rs.getInt(1);
-                double precio = rs.getDouble(3);
-                int cant = rs.getInt(4);
-                String codigo = rs.getString(2);
-                double utilidad = (precio - Utilidad.costo(codigo)) * cant;
-                utilidad(utilidad, id);
-            }
-        } catch (SQLException e) {
-            System.err.println(e);
-        }
-    }//GEN-LAST:event_jButton5ActionPerformed
-    public void utilidad(double utilidad, int id) {
-        try ( Connection cn2 = Conexion.Conexion()) {
-            PreparedStatement ps2 = cn2.prepareStatement("update detallesventa set Utilidad=? where iddetallesVenta= ?");
-            ps2.setInt(2, id);
-            ps2.setDouble(1, utilidad);
-            ps2.executeUpdate();
-            nro();
-        } catch (SQLException ex) {
-            System.err.println(ex);
-        }
-    }
-
-    public void nro() {
-        int Nro=0;
-        Connection cn2 = Conexion.Conexion();
-        PreparedStatement ps;
-        try {
-            ps = cn2.prepareStatement("select max(nroVentas) from ventas");
-
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Nro = rs.getInt(1);
-            }
-            for (int i = 1; i<=Nro; i++) {
-                sumarUti(i);
-            }
-        } catch (SQLException ex) {
-            System.err.println(ex);
-        }
-    }
-
-    public void sumarUti(int nro) {
-        try ( Connection cn = Conexion.Conexion()) {
-            double utilidatotal = 0;
-            PreparedStatement ps = cn.prepareStatement("select Utilidad from detallesventa where nro_Venta=?");
-            ps.setInt(1, nro);
-            ResultSet rs2 = ps.executeQuery();
-            while (rs2.next()) {
-                utilidatotal += rs2.getDouble(1);
-            }
-            actualizarUtilidad(utilidatotal, nro);
-        } catch (SQLException ex) {
-            Logger.getLogger(Reportes.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    public void actualizarUtilidad(double utilidad, int id) {
-        try ( Connection cn = Conexion.Conexion()) {
-            PreparedStatement ps = cn.prepareStatement("update ventas set utilidad=? where nroVentas= ?");
-            ps.setDouble(1, utilidad);
-            ps.setInt(2, id);
-            ps.executeUpdate();
-        } catch (SQLException ex) {
-            System.err.println(ex);
-        }
-
-    }
+    
 
     public int totalNomina() {
         totalNomina = 0;
@@ -1589,7 +1503,7 @@ public final class Reportes extends javax.swing.JFrame {
         double t = 0;
         double n;
         for (int i = 0; i < tabla.getRowCount(); i++) {
-            n = Double.parseDouble(tabla.getValueAt(i, columna).toString());
+            n = Double.parseDouble(tabla.getValueAt(i, columna).toString().replace(",", ""));
             t += n;
         }
         total.setText("$" + t);
@@ -1648,7 +1562,6 @@ public final class Reportes extends javax.swing.JFrame {
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
-    private javax.swing.JButton jButton5;
     private javax.swing.JButton jButtonBuscar;
     private javax.swing.JButton jButtonBuscar1;
     private javax.swing.JComboBox<String> jComboBox1;
