@@ -8,6 +8,7 @@ import Clases.Conexion;
 import Clases.Fechas;
 import Clases.Fondo;
 import Clases.ImagenBoton;
+import Clases.Utilidad;
 import Clases.Validaciones;
 import static Ventanas.Ventas.jLabelNoVenta;
 import java.awt.Color;
@@ -19,11 +20,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.JFrame;
 
@@ -44,7 +48,7 @@ import net.sf.jasperreports.view.JasperViewer;
  */
 public final class Reportes extends javax.swing.JFrame {
 
-    public static int totalNomina=0;
+    public static int totalNomina = 0;
     public static int m = 0;
     public static boolean b = true;
     public static String nro;
@@ -270,6 +274,7 @@ public final class Reportes extends javax.swing.JFrame {
         jLabel3 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
+        jButton5 = new javax.swing.JButton();
         jPanel2 = new Fondo("FondoMenu.jpg");
         jLabel16 = new javax.swing.JLabel();
         jTextField14 = new javax.swing.JTextField();
@@ -510,6 +515,13 @@ public final class Reportes extends javax.swing.JFrame {
             }
         });
 
+        jButton5.setText("jButton5");
+        jButton5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton5ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
@@ -522,6 +534,8 @@ public final class Reportes extends javax.swing.JFrame {
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addGap(195, 195, 195)
                         .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButton5)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -558,7 +572,9 @@ public final class Reportes extends javax.swing.JFrame {
                             .addComponent(jTextFieldTotalVenta, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(27, 27, 27))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                        .addComponent(jButton2)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jButton2)
+                            .addComponent(jButton5))
                         .addGap(17, 17, 17))))
         );
 
@@ -1292,21 +1308,21 @@ public final class Reportes extends javax.swing.JFrame {
         int i = jTable2.getRowCount();
         if (i > 0) {
             JasperReport jr = null;
-        String file = "src/Clases/reporte.jasper";
-        try {
-            Connection cn = Conexion.Conexion();
-            Map parametro = new HashMap();
-            parametro.put("Fecha_Inicial", jDateChooser1.getDate());
-            parametro.put("FechaFinal", jDateChooser2.getDate());
-            parametro.put("Total" ,jTextFieldTotalVenta.getText());
-            jr = (JasperReport) JRLoader.loadObjectFromFile(file);
-            JasperPrint jp = JasperFillManager.fillReport(jr, parametro, cn);
-            JasperViewer jv = new JasperViewer(jp,false);
-            jv.setVisible(true);
-            jv.setTitle("Reporte Ventas");
-        } catch (JRException e) {
-            System.out.println(e);
-        }
+            String file = "src/Clases/reporte.jasper";
+            try {
+                Connection cn = Conexion.Conexion();
+                Map parametro = new HashMap();
+                parametro.put("Fecha_Inicial", jDateChooser1.getDate());
+                parametro.put("FechaFinal", jDateChooser2.getDate());
+                parametro.put("Total", jTextFieldTotalVenta.getText());
+                jr = (JasperReport) JRLoader.loadObjectFromFile(file);
+                JasperPrint jp = JasperFillManager.fillReport(jr, parametro, cn);
+                JasperViewer jv = new JasperViewer(jp, false);
+                jv.setVisible(true);
+                jv.setTitle("Reporte Ventas");
+            } catch (JRException e) {
+                System.out.println(e);
+            }
         }
     }//GEN-LAST:event_jButton2ActionPerformed
 
@@ -1416,40 +1432,120 @@ public final class Reportes extends javax.swing.JFrame {
 
     private void jTextFieldValor1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldValor1KeyPressed
         df = (DefaultTableModel) jTableDeduccion.getModel();
-        if(!Validaciones.validarEnter(evt)){
+        if (!Validaciones.validarEnter(evt)) {
             String[] datos = new String[4];
             datos[0] = jTextFieldEmpleado.getText().trim();
             datos[1] = jLabelNombreE.getText().trim();
             datos[2] = jTextFieldNovedad1.getText().trim();
             datos[3] = jTextFieldValor1.getText().trim();
             df.addRow(datos);
-            
+
         }
     }//GEN-LAST:event_jTextFieldValor1KeyPressed
 
     private void jTableDevengadoKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTableDevengadoKeyPressed
-       if(!Validaciones.validarSuprimir(evt)){
-           borrar();
-       }
+        if (!Validaciones.validarSuprimir(evt)) {
+            borrar();
+        }
     }//GEN-LAST:event_jTableDevengadoKeyPressed
 
     private void jButtonBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonBuscarActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jButtonBuscarActionPerformed
-    public int totalNomina(){
-        totalNomina=0;
-        for(int i = 0 ;i<jTableDevengado.getRowCount();i++){
+
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+
+        try {
+
+            Connection cn = Conexion.Conexion();
+            PreparedStatement ps = cn.prepareStatement("select iddetallesVenta,codigo,precioUnitario,cantidad from detallesventa");
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                int id = rs.getInt(1);
+                double precio = rs.getDouble(3);
+                int cant = rs.getInt(4);
+                String codigo = rs.getString(2);
+                double utilidad = (precio - Utilidad.costo(codigo)) * cant;
+                utilidad(utilidad, id);
+            }
+        } catch (SQLException e) {
+            System.err.println(e);
+        }
+    }//GEN-LAST:event_jButton5ActionPerformed
+    public void utilidad(double utilidad, int id) {
+        try ( Connection cn2 = Conexion.Conexion()) {
+            PreparedStatement ps2 = cn2.prepareStatement("update detallesventa set Utilidad=? where iddetallesVenta= ?");
+            ps2.setInt(2, id);
+            ps2.setDouble(1, utilidad);
+            ps2.executeUpdate();
+            nro();
+        } catch (SQLException ex) {
+            System.err.println(ex);
+        }
+    }
+
+    public void nro() {
+        int Nro=0;
+        Connection cn2 = Conexion.Conexion();
+        PreparedStatement ps;
+        try {
+            ps = cn2.prepareStatement("select max(nroVentas) from ventas");
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Nro = rs.getInt(1);
+            }
+            for (int i = 1; i<=Nro; i++) {
+                sumarUti(i);
+            }
+        } catch (SQLException ex) {
+            System.err.println(ex);
+        }
+    }
+
+    public void sumarUti(int nro) {
+        try ( Connection cn = Conexion.Conexion()) {
+            double utilidatotal = 0;
+            PreparedStatement ps = cn.prepareStatement("select Utilidad from detallesventa where nro_Venta=?");
+            ps.setInt(1, nro);
+            ResultSet rs2 = ps.executeQuery();
+            while (rs2.next()) {
+                utilidatotal += rs2.getDouble(1);
+            }
+            actualizarUtilidad(utilidatotal, nro);
+        } catch (SQLException ex) {
+            Logger.getLogger(Reportes.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void actualizarUtilidad(double utilidad, int id) {
+        try ( Connection cn = Conexion.Conexion()) {
+            PreparedStatement ps = cn.prepareStatement("update ventas set utilidad=? where nroVentas= ?");
+            ps.setDouble(1, utilidad);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            System.err.println(ex);
+        }
+
+    }
+
+    public int totalNomina() {
+        totalNomina = 0;
+        for (int i = 0; i < jTableDevengado.getRowCount(); i++) {
             double valor = Double.parseDouble(jTableDevengado.getValueAt(i, 3).toString());
             totalNomina += (int) valor;
         }
         return totalNomina;
     }
-    public void borrar(){
+
+    public void borrar() {
         df = (DefaultTableModel) jTableDevengado.getModel();
         int i = jTableDevengado.getSelectedRow();
         df.removeRow(i);
         jTextTotalNomina.setValue(totalNomina());
     }
+
     public void nroNomina() {
         try {
             Connection cn = Conexion.Conexion();
@@ -1546,13 +1642,13 @@ public final class Reportes extends javax.swing.JFrame {
     /**
      * @param args the command line arguments
      */
-    
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
+    private javax.swing.JButton jButton5;
     private javax.swing.JButton jButtonBuscar;
     private javax.swing.JButton jButtonBuscar1;
     private javax.swing.JComboBox<String> jComboBox1;

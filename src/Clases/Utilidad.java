@@ -42,7 +42,6 @@ public class Utilidad {
                 while (rs.next()) {
                         utilida = rs.getDouble(1);
                 }
-
             } catch (SQLException e) {
                 System.err.println(e);
             }

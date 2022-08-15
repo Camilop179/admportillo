@@ -627,6 +627,8 @@ public final class Ventas extends javax.swing.JFrame {
             jTextFieldNombre.setText("");
             jTextFieldTotal.setText("0");
             limpiar();
+            utilidaTotal.clear();
+            System.out.println(utilidaTotal);
             nroVenta();
 
             Administrador.VentaDia();
@@ -738,7 +740,7 @@ public final class Ventas extends javax.swing.JFrame {
         try {
 
             Connection cn = Conexion.Conexion();
-            PreparedStatement pr = cn.prepareStatement("INSERT INTO detallesventa (iddetallesVenta,nro_venta,codigo,producto,precioUnitario,cantidad,precioTotal) values(?,?,?,?,?,?,?)");
+            PreparedStatement pr = cn.prepareStatement("INSERT INTO detallesventa (iddetallesVenta,nro_venta,codigo,producto,precioUnitario,cantidad,utilidad,precioTotal) values(?,?,?,?,?,?,?,?)");
             for (int i = 0; i < jTableVenta.getRowCount(); i++) {
                 pr.setInt(1, 0);
                 pr.setInt(2, Integer.parseInt(jLabelNoVenta.getText()));
@@ -746,7 +748,8 @@ public final class Ventas extends javax.swing.JFrame {
                 pr.setString(4, jTableVenta.getValueAt(i, 1).toString());
                 pr.setDouble(5, Double.parseDouble(jTableVenta.getValueAt(i, 2).toString()));
                 pr.setInt(6, Integer.parseInt(jTableVenta.getValueAt(i, 3).toString()));
-                pr.setDouble(7, Double.parseDouble(jTableVenta.getValueAt(i, 4).toString()));
+                pr.setDouble(7, (double) utilidaTotal.get(i));
+                pr.setDouble(8, Double.parseDouble(jTableVenta.getValueAt(i, 4).toString()));
                 String codigo = jTableVenta.getValueAt(i, 0).toString();
                 int cantidad = Integer.parseInt(jTableVenta.getValueAt(i, 3).toString());
                 ActualizarCantidad.restar(cantidad, codigo);

@@ -417,7 +417,7 @@ public class Usuario extends javax.swing.JFrame {
         if (validacionUsuario() || jTableUsuarios.getValueAt(i, 1).toString().equals(jTextFieldUsuario.getText())) {
             try {
                 Connection cn = Conexion.Conexion();
-                PreparedStatement pre = cn.prepareStatement("update usuarios set usuario = ?,contraseña=?,nombre =?,cargo = ?,cedula = ?,celular =?,correo =? where idusuarios = " + jTableUsuarios.getValueAt(i, 0));
+                PreparedStatement pre = cn.prepareStatement("update usuarios set usuario = ?,contraseña=?,nombre =?,cargo = ?,cedula = ?,celular =?,correo =? where idusuarios = ?");
                 pre.setString(1, jTextFieldUsuario.getText());
                 if (!confirmarcontraseña(jTextFieldContraseña.getText())) {
                     pre.setString(2, Hash.hash24(jTextFieldContraseña.getText()));
@@ -429,10 +429,11 @@ public class Usuario extends javax.swing.JFrame {
                 pre.setString(5, jTextFieldCedula.getText());
                 pre.setString(6, jTextFieldCelular.getText());
                 pre.setString(7, jTextFieldCorrea.getText());
+                pre.setInt(8, Integer.parseInt(jTableUsuarios.getValueAt(i, 0).toString()));
                 pre.executeUpdate();
                 JOptionPane.showMessageDialog(null, "Actualizacion exitosa");
 
-            } catch (Exception e) {
+            } catch (HeadlessException | SQLException e) {
                 System.err.println("Error al ingresar el producto " + e);
                 JOptionPane.showMessageDialog(null, "¡Error al ingresar el producto!. Contacte al soporte Corporacion Portillo.");
             }
