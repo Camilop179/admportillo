@@ -843,9 +843,7 @@ public class Compras extends javax.swing.JFrame {
     public void eliminarProducto() {
         int row = jTableCompra.getSelectedRow();
         double totald = Double.parseDouble(jTableCompra.getValueAt(row, 4).toString());
-        total -= totald;
-        jTextFieldTotal.setText("" + total);
-        double util = Utilidad.utilidad(jTableCompra.getValueAt(row, 0).toString());
+        
         tabla.removeRow(jTableCompra.getSelectedRow());
     }
 
