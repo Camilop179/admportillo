@@ -2,7 +2,7 @@
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="null" language="groovy" pageWidth="141" pageHeight="840" columnWidth="125" leftMargin="8" rightMargin="8" topMargin="20" bottomMargin="20" uuid="d83149d6-3f30-4437-a9b6-3808e47a6f79">
 	<property name="ireport.zoom" value="3.7320590416778834"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="240"/>
+	<property name="ireport.y" value="144"/>
 	<style name="table">
 		<box>
 			<pen lineWidth="1.0" lineColor="#000000"/>
@@ -27,6 +27,7 @@
 	<parameter name="NroVentas" class="java.lang.Integer">
 		<defaultValueExpression><![CDATA[1]]></defaultValueExpression>
 	</parameter>
+	<parameter name="Url" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[select v.*,d.*,u.usuario,c.celular from ventas v join detallesventa d on nroVentas = nro_venta join usuarios u on u.idUsuarios=v.idUsuario join clientes c on c.cedula=v.cedula_cliente where nroVentas = $P{NroVentas};]]>
 	</queryString>
@@ -131,7 +132,7 @@
 			</textField>
 			<image>
 				<reportElement x="18" y="0" width="95" height="94" uuid="a653e3c9-7601-4f73-9a81-81cfd80c1131"/>
-				<imageExpression><![CDATA["C:\\Users\\harol\\Documents\\GitHub\\Camilop179\\src\\imagenes\\logo.jpg"]]></imageExpression>
+				<imageExpression><![CDATA[$P{Url}]]></imageExpression>
 			</image>
 		</band>
 	</title>

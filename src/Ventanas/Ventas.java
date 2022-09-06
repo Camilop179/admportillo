@@ -19,6 +19,7 @@ import java.awt.Image;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.net.URL;
 import java.text.DecimalFormat;
 
 import java.util.ArrayList;
@@ -154,7 +155,7 @@ public final class Ventas extends javax.swing.JFrame {
     public final void tamañoColumna() {
         DefaultTableModel tabla = new DefaultTableModel() {
             boolean[] m = new boolean[]{
-                false, false, true, true, false
+                false, true, true, true, false
             };
 
             @Override
@@ -205,17 +206,19 @@ public final class Ventas extends javax.swing.JFrame {
     }
 
     public void imprimir1() {
+        URL url = getClass().getResource("/imagenes/logo.jpg");
         JasperReport jr;
         String file = "src/Clases/report1.jasper";
         try {
             Connection cn = Conexion.Conexion();
             Map parametro = new HashMap();
             parametro.put("NroVentas", Integer.parseInt(jLabelNoVenta.getText()));
+            parametro.put("Url", url);
             jr = (JasperReport) JRLoader.loadObjectFromFile(file);
             JasperPrint jp = JasperFillManager.fillReport(jr, parametro, cn);
             JasperViewer jv = new JasperViewer(jp, false);
             jv.setVisible(true);
-            jv.setTitle("Reporte VEntas");
+            jv.setTitle("Reporte Ventas");
         } catch (JRException e) {
             System.out.println(e);
         }
@@ -666,7 +669,7 @@ public final class Ventas extends javax.swing.JFrame {
                     int totalV = precio * cant;
                     jTableVenta.setValueAt(cant, i, 3);
                     jTableVenta.setValueAt(dm.format(totalV), i, 4);
-                    utilidaTotal.set(i, Utilidad.utilidad(codigo) * cant);
+                    utilidaTotal.set(i, (precio-Utilidad.costo(codigo))* cant);
                     System.out.println(utilidaTotal);
                     total();
                 } else {
@@ -805,7 +808,7 @@ public final class Ventas extends javax.swing.JFrame {
         DefaultTableModel tabla = (DefaultTableModel) jTableVenta.getModel();
         int row = jTableVenta.getSelectedRow();
         utilidaTotal.remove(row);
-        tabla.removeRow(jTableVenta.getSelectedRow());
+        tabla.removeRow(row);
         total();
     }
 
@@ -816,7 +819,7 @@ public final class Ventas extends javax.swing.JFrame {
         int cant = Integer.parseInt(jTableVenta.getValueAt(row, 3).toString());
         int precio = Integer.parseInt(jTableVenta.getValueAt(row, 2).toString().replaceAll("[\\D]", ""));
         int total1 = cant * precio;
-        double util = Utilidad.costo(codigo) - precio;
+        double util = (precio -Utilidad.costo(codigo))*cant;
         utilidaTotal.set(row, util);
         jTableVenta.setValueAt(dm.format(total1), row, 4);
     }
