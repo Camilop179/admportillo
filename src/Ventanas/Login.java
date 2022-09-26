@@ -232,7 +232,6 @@ public class Login extends javax.swing.JFrame {
     public void iniciarsesion() {
         usuario = jTextFieldUsuario.getText().trim();
         contraseña = Hash.hash24(new String(jPasswordFieldContraseña.getPassword()));
-        System.out.println(contraseña);
         if (!usuario.equals("") || !contraseña.equals("")) {
             try {
                 Connection cn = Conexion.Conexion();
