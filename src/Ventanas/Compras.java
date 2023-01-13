@@ -8,6 +8,7 @@ import Clases.ActualizarCantidad;
 import Clases.Conexion;
 import Clases.Fechas;
 import Clases.Fondo;
+import Clases.FormatoPesos;
 import Clases.ImagenBoton;
 import Clases.Imagenes;
 import Clases.Utilidad;
@@ -662,14 +663,26 @@ public class Compras extends javax.swing.JFrame {
     }//GEN-LAST:event_jTextFieldNitKeyPressed
 
     private void jButtonVenderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonVenderActionPerformed
-        compra();
-        detalleCompra();
-        JOptionPane.showMessageDialog(null, "Compra exitosa");
+        int i = jComboBox1.getSelectedIndex();
+        String FormaPago;
+        if (i == 0) {
+            FormaPago = "Cancelado";
+            compra(FormaPago);
+            detalleCompra();
+            caja();
+            JOptionPane.showMessageDialog(null, "Compra exitosa");
+        } else {
+            FormaPago = "Pendiente";
+
+            compra(FormaPago);
+            detalleCompra();
+            JOptionPane.showMessageDialog(null, "Compra exitosa");
+        }
 
         total = 0;
         limpiar();
     }//GEN-LAST:event_jButtonVenderActionPerformed
-    
+
     private void jTextFieldNombreActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldNombreActionPerformed
 
     }//GEN-LAST:event_jTextFieldNombreActionPerformed
@@ -720,7 +733,7 @@ public class Compras extends javax.swing.JFrame {
         int precio = Integer.parseInt(jTableCompra.getValueAt(row, 2).toString());
         int total1 = cant * precio;
         double util = Utilidad.costo(codigo) - precio;
-        
+
         jTableCompra.setValueAt(total1, row, 4);
     }
     private void jTableCompraKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTableCompraKeyReleased
@@ -732,19 +745,24 @@ public class Compras extends javax.swing.JFrame {
     public static void buscarProveedor() {
         if (!jTextFieldNit.getText().equals("")) {
             try {
-
                 String nit = jTextFieldNit.getText();
                 Connection cn = Conexion.Conexion();
-                PreparedStatement pr = cn.prepareStatement("select Nombre,Asesor from proveedor where Nit = " + nit + "");
+                PreparedStatement pr = cn.prepareStatement("select Nombre,Asesor from proveedor where Nit = ?");
+                pr.setString(1, nit);
                 ResultSet rs = pr.executeQuery();
                 if (rs.next()) {
                     String nombre = rs.getString(1);
                     String asesor = rs.getString(2);
                     jTextFieldNombre.setText(nombre);
                     jTextFieldAsesorr.setText(asesor);
-
                     jTextFieldNombre.requestFocus();
-
+                } else {
+                    int i = JOptionPane.showConfirmDialog(null, "No se encuentra cliente", "¿desea ingresar el cliente?", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+                    System.out.println(i);
+                    if (i == 0) {
+                        n = true;
+                        new Proveedor().setVisible(true);
+                    }
                 }
                 cn.close();
             } catch (SQLException e) {
@@ -768,6 +786,25 @@ public class Compras extends javax.swing.JFrame {
         jTextFieldCambio.setText("");
     }
 
+    void caja() {
+        try {
+            double total = Double.parseDouble(Administrador.jLabelCaja.getText().replace(",", ""))
+                    - Double.valueOf(jTextFieldTotal.getText().replace(",", ""));
+            Connection cn = Conexion.Conexion();
+            PreparedStatement ps = cn.prepareStatement("insert into caja(Concepto,Valor,Total,Fecha,Hora) values(?,?,?,?,?)");
+            ps.setString(1, "FC #" + jLabelNoCompra.getText());
+            ps.setDouble(2, -Double.valueOf(jTextFieldTotal.getText().replace(",", "")));
+            ps.setDouble(3, total);
+            ps.setDate(4, new java.sql.Date(Fechas.fechaActualDate().getTime()));
+            ps.setTime(5, new Time(Fechas.fechaActualDate().getTime()));
+            ps.execute();
+            Administrador.jLabelCaja.setText(FormatoPesos.formato(total));
+            cn.close();
+        } catch (NumberFormatException | SQLException e) {
+            System.out.println(e);
+        }
+    }
+
     public void detalleCompra() {
         try {
 
@@ -784,7 +821,7 @@ public class Compras extends javax.swing.JFrame {
                 String codigo = jTableCompra.getValueAt(i, 0).toString();
                 int cantidad = Integer.parseInt(jTableCompra.getValueAt(i, 3).toString());
                 double precio = Double.parseDouble(jTableCompra.getValueAt(i, 2).toString());
-                ActualizarCantidad.aumentar(cantidad,precio, codigo);
+                ActualizarCantidad.aumentar(cantidad, precio, codigo);
                 pr.executeUpdate();
             }
             nroCompra();
@@ -802,7 +839,7 @@ public class Compras extends javax.swing.JFrame {
         jTextFieldTotal.setText("" + t);
     }
 
-    public void compra() {
+    public void compra(String FormaPago) {
         try {
             String fecha_i = Fechas.fechaActual();
             String fecha_v = ((JTextField) jDateChooser_fechav.getDateEditor().getUiComponent()).getText();
@@ -825,14 +862,9 @@ public class Compras extends javax.swing.JFrame {
             pr.setString(6, jComboBox1.getSelectedItem().toString());
             pr.setString(7, jTextFieldNit.getText());
             pr.setString(8, jTextFieldNombre.getText());
-            if (i == 0) {
-                pr.setString(9, "Cancelado");
-                pr.executeUpdate();
-            } else {
-                pr.setString(9, "Pendiente");
+            pr.setString(9, FormaPago);
 
-                pr.executeUpdate();
-            }
+            pr.executeUpdate();
 
         } catch (NumberFormatException | SQLException | ParseException e) {
             JOptionPane.showMessageDialog(null, "Error al Conectar a la Base de Datos \n " + e);
@@ -843,7 +875,7 @@ public class Compras extends javax.swing.JFrame {
     public void eliminarProducto() {
         int row = jTableCompra.getSelectedRow();
         double totald = Double.parseDouble(jTableCompra.getValueAt(row, 4).toString());
-        
+
         tabla.removeRow(jTableCompra.getSelectedRow());
     }
 

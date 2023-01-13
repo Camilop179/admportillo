@@ -468,11 +468,11 @@ public final class Producto extends javax.swing.JFrame {
     }//GEN-LAST:event_jTextFieldCantidadActionPerformed
 
     private void jLabelListoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabelListoMouseClicked
-        if(Catalogo.m==0){
+        if(Catalogo.cata==0){
             agregar();
         }else{
             actualizar(idp);
-            Catalogo.m=0;
+            Catalogo.cata=0;
             dispose();
         }
     }//GEN-LAST:event_jLabelListoMouseClicked
@@ -615,7 +615,6 @@ public void actualizar(int id){
                 jTextFieldUtilidad.setText("");
                 jTextFieldUtilidad_Por.setText("");
                 jTextFieldProducto.requestFocus();
-                Catalogo.inventario();
                 Catalogo.total();
                 cn.close();
             } catch (SQLException e) {
@@ -689,7 +688,6 @@ public void actualizar(int id){
                 jTextFieldUtilidad.setText("");
                 jTextFieldUtilidad_Por.setText("");
                 jTextFieldProducto.requestFocus();
-                Catalogo.inventario();
                 Catalogo.total();
                 cn.close();
             } catch (SQLException e) {
@@ -706,7 +704,7 @@ public void actualizar(int id){
             addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosing(WindowEvent e) {
-                    Catalogo.m=0;
+                    Catalogo.cata=0;
                 }
             });
         } catch (Exception e) {

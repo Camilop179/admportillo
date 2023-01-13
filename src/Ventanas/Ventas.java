@@ -5,10 +5,12 @@ import Clases.Conexion;
 import Clases.Errores;
 import Clases.Fechas;
 import Clases.Fondo;
+import Clases.FormatoPesos;
 import Clases.ImagenBoton;
 import Clases.Imagenes;
 import Clases.Validaciones;
 import Clases.Utilidad;
+import static Ventanas.Administrador.jProgressBar1;
 import java.awt.Color;
 
 import java.sql.*;
@@ -20,12 +22,10 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.net.URL;
-import java.text.DecimalFormat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.table.TableColumnModel;
@@ -42,7 +42,6 @@ import net.sf.jasperreports.view.JasperViewer;
  */
 public final class Ventas extends javax.swing.JFrame {
 
-    static int total = 0;
     public static boolean m = false;
     static ArrayList utilidaTotal = new ArrayList();
 
@@ -50,7 +49,6 @@ public final class Ventas extends javax.swing.JFrame {
 
         Fondo fondo = new Fondo("FondoMenu.jpg");
         this.setContentPane(fondo);
-        setFocusable(true);
         initComponents();
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         new ImagenBoton("vender.png", jButtonVender, 45, 45);
@@ -59,7 +57,8 @@ public final class Ventas extends javax.swing.JFrame {
         new Imagenes("Adelante.png", jLabelRegresar1);
         new Imagenes("Atras.png", jLabelRegresar);
         new Imagenes("imprimir.png", jLabelImprimir);
-        Icon icono = new ImageIcon(imagen1.getImage().getScaledInstance(45, 45, Image.SCALE_DEFAULT));
+        new ImagenBoton("buscando.png", jButtonBuscando, 38, 38);
+        new ImageIcon(imagen1.getImage().getScaledInstance(45, 45, Image.SCALE_DEFAULT));
         jLabelFecha.setText(Fechas.fechaActual());
         this.setLocationRelativeTo(null);
         m = true;
@@ -91,6 +90,7 @@ public final class Ventas extends javax.swing.JFrame {
                     if (i == 0) {
                         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                         m = false;
+                        utilidaTotal.clear();
                     } else {
                         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
                     }
@@ -102,17 +102,20 @@ public final class Ventas extends javax.swing.JFrame {
 
     public void reportes() {
         if (Reportes.m == 1) {
-            buscarDetalle();
-            buscarVentas();
+            String NroVentas = jLabelNoVenta.getText();
+            buscarDetalle(NroVentas);
+            buscarVentas(NroVentas);
         }
     }
 
-    public void buscarDetalle() {
+    public static void buscarDetalle(String NroVenta) {
+        limpiar();
         DefaultTableModel tabla = (DefaultTableModel) jTableVenta.getModel();
         String[] datos = new String[5];
         try {
             Connection cn = Conexion.Conexion();
-            PreparedStatement pr2 = cn.prepareStatement("select codigo,producto,precioUnitario,cantidad,PrecioTotal from detallesventa where nro_venta = " + jLabelNoVenta.getText());
+            PreparedStatement pr2 = cn.prepareStatement("select codigo,producto,precioUnitario,cantidad,PrecioTotal from detallesventa where nro_venta = ?");
+            pr2.setString(1, NroVenta);
             ResultSet rs2 = pr2.executeQuery();
             while (rs2.next()) {
                 for (int i = 0; i < 5; i++) {
@@ -126,12 +129,13 @@ public final class Ventas extends javax.swing.JFrame {
         }
     }
 
-    public void buscarVentas() {
+    public static void buscarVentas(String NroVenta) {
         try {
             Connection cn;
             cn = Conexion.Conexion();
             PreparedStatement pr;
-            pr = cn.prepareStatement("select * from ventas where nroVentas = " + jLabelNoVenta.getText());
+            pr = cn.prepareStatement("select * from ventas where nroVentas = ?");
+            pr.setString(1, NroVenta);
             ResultSet rs = pr.executeQuery();
 
             while (rs.next()) {
@@ -206,15 +210,15 @@ public final class Ventas extends javax.swing.JFrame {
     }
 
     public void imprimir1() {
-        URL url = getClass().getResource("/imagenes/logo.jpg");
         JasperReport jr;
-        String file = "src/Clases/report1.jasper";
+        URL file = this.getClass().getResource("/Clases/report1.jasper");
         try {
             Connection cn = Conexion.Conexion();
             Map parametro = new HashMap();
-            parametro.put("NroVentas", Integer.parseInt(jLabelNoVenta.getText()));
-            parametro.put("Url", url);
-            jr = (JasperReport) JRLoader.loadObjectFromFile(file);
+            URL url = getClass().getResource("/imagenes/logo.jpg");
+            parametro.put("NroVentas", Integer.valueOf(jLabelNoVenta.getText()));
+            parametro.put("url", url);
+            jr = (JasperReport) JRLoader.loadObject(file);
             JasperPrint jp = JasperFillManager.fillReport(jr, parametro, cn);
             JasperViewer jv = new JasperViewer(jp, false);
             jv.setVisible(true);
@@ -223,6 +227,218 @@ public final class Ventas extends javax.swing.JFrame {
             System.out.println(e);
         }
     }
+
+    public void vender() {
+        new FormaPago(this, true).setVisible(true);
+        if (FormaPago.m) {
+            int n = JOptionPane.showConfirmDialog(null, "¿Desea imprimir Factura?", "Venta Exitosa", JOptionPane.YES_NO_OPTION);
+            if (n == 0) {
+                imprimir1();
+            }
+            jTextFieldCedula.setText("");
+            jTextFieldNombre.setText("");
+            jTextFieldTotal.setText("0");
+            limpiar();
+            utilidaTotal.clear();
+            nroVenta();
+            Administrador.ventas();
+        }
+    }
+
+    public static void total() {
+        int t = 0;
+        for (int i = 0; i < jTableVenta.getRowCount(); i++) {
+            t += Integer.parseInt(jTableVenta.getValueAt(i, 4).toString().replace(",", ""));
+        }
+        jTextFieldTotal.setText(FormatoPesos.formato(t));
+    }
+
+    public static void producto() {
+        DefaultTableModel tabla = (DefaultTableModel) jTableVenta.getModel();
+
+        try {
+            String codigo = jTextFieldCodigo.getText().trim();
+            Connection cnn = Conexion.Conexion();
+            PreparedStatement pre = cnn.prepareStatement("select codigo,producto,precio_venta,precio_compra from producto where codigo = ? or codigo_barras = ?");
+            pre.setString(1, codigo);
+            pre.setString(2, codigo);
+            ResultSet rs = pre.executeQuery();
+            if (rs.next()) {
+                int i = tabla(rs.getString(1));
+                if (i >= 0) {
+                    int cant = Integer.parseInt(jTableVenta.getValueAt(i, 3).toString());
+                    int precio = Integer.parseInt(jTableVenta.getValueAt(i, 2).toString().replaceAll("[\\D]", ""));
+                    cant++;
+                    int totalV = precio * cant;
+                    jTableVenta.setValueAt(cant, i, 3);
+                    jTableVenta.setValueAt(FormatoPesos.formato(totalV), i, 4);
+                    utilidaTotal.set(i, (precio - rs.getDouble(4)) * cant);
+                    System.out.println(utilidaTotal);
+                    total();
+                } else {
+                    String[] datos = new String[5];
+                    datos[0] = rs.getString(1);
+                    datos[1] = rs.getString(2);
+                    datos[2] = FormatoPesos.formato(rs.getInt(3));
+                    datos[3] = "1";
+                    datos[4] = FormatoPesos.formato(rs.getInt(3));
+                    tabla.addRow(datos);
+                    Object obg = rs.getDouble(3) - rs.getDouble(4);
+                    utilidaTotal.add(obg);
+                    System.out.println(utilidaTotal);
+                    total();
+                }
+                jTextFieldCodigo.setText("");
+            } else {
+                m = true;
+                new Catalogo().setVisible(true);
+            }
+
+        } catch (SQLException e) {
+            System.err.println(e);
+            Errores.Errores("Error al Agregar Producto: " + e);
+        }
+    }
+
+    public void buscarcl() {
+        if (!jTextFieldCedula.getText().equals("")) {
+            try ( Connection cn = Conexion.Conexion()) {
+                String cedula = jTextFieldCedula.getText();
+                PreparedStatement pr = cn.prepareStatement("select * from clientes where cedula = ?");
+                pr.setString(1, cedula);
+                ResultSet rs = pr.executeQuery();
+                if (rs.next()) {
+                    String nombre = rs.getString(3);
+                    
+                    jTextFieldNombre.setText(nombre);
+                    jLabelTelefono.setText(rs.getString(4));
+                    jLabelSaldo.setText(rs.getString(5));
+                    jTextFieldNombre.requestFocus();
+
+                } else {
+
+                    int i = JOptionPane.showConfirmDialog(null, "No se encuentra cliente", "¿desea ingresar el cliente?", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+                    System.out.println(i);
+                    if (i == 0) {
+
+                        IngresarClientes cliente = new IngresarClientes(this, true);
+                        IngresarClientes.jTextFieldCedula.setText(cedula);
+                        cliente.setVisible(true);
+                        buscarcl();
+                    }
+                }
+            } catch (SQLException e) {
+                System.out.println(e);
+                Errores.Errores("Error al Buscar CLiente: " + e);
+            }
+        }
+    }
+
+    public static void limpiar() {
+        DefaultTableModel tabla = (DefaultTableModel) jTableVenta.getModel();
+        for (int i = 0; i < jTableVenta.getRowCount(); i++) {
+            tabla.removeRow(i);
+            i--;
+            jTextFieldCedula.setText("");
+            jTextFieldNombre.setText("");
+            jTextFieldTotal.setText("0");
+
+        }
+    }
+
+    public static void detalleVenta() {
+        try {
+
+            Connection cn = Conexion.Conexion();
+            PreparedStatement pr = cn.prepareStatement("INSERT INTO detallesventa (iddetallesVenta,nro_venta,codigo,producto,precioUnitario,cantidad,utilidad,precioTotal) values(?,?,?,?,?,?,?,?)");
+            for (int i = 0; i < jTableVenta.getRowCount(); i++) {
+                pr.setInt(1, 0);
+                pr.setInt(2, Integer.parseInt(jLabelNoVenta.getText()));
+                pr.setString(3, jTableVenta.getValueAt(i, 0).toString());
+                pr.setString(4, jTableVenta.getValueAt(i, 1).toString());
+                pr.setDouble(5, Double.parseDouble(jTableVenta.getValueAt(i, 2).toString().replace(",", "")));
+                pr.setInt(6, Integer.parseInt(jTableVenta.getValueAt(i, 3).toString()));
+                pr.setDouble(7, (double) utilidaTotal.get(i));
+                pr.setDouble(8, Double.parseDouble(jTableVenta.getValueAt(i, 4).toString().replace(",", "")));
+                pr.executeUpdate();
+                String codigo = jTableVenta.getValueAt(i, 0).toString();
+                int cantidad = Integer.parseInt(jTableVenta.getValueAt(i, 3).toString());
+                ActualizarCantidad.restar(cantidad, codigo);
+            }
+
+        } catch (SQLException e) {
+            System.err.println(e);
+            JOptionPane.showMessageDialog(null, "Error al subir detalles venta: " + e);
+            Errores.Errores("Error al Subir Detalles de venta: " + e);
+        }
+    }
+
+    public static void venta(String FormaPago, double cambio, double efectivo,double saldo) {
+        try {
+            double utilidad = 0;
+            for (int i = 0; i < utilidaTotal.size(); i++) {
+                utilidad += Double.parseDouble(utilidaTotal.get(i).toString());
+            }
+            int nro = nroVenta();
+            java.sql.Date fecho_i_bd = new java.sql.Date(Fechas.fechaActualDate().getTime());
+            Connection cn = Conexion.Conexion();
+            PreparedStatement pr = cn.prepareStatement("INSERT INTO ventas (idventas,nroVentas,cliente,cedula_cliente,idUsuario,utilidad,fecha,precio_Total,Efectivo,Cambio,FormaPago,Saldo) values(?,?,?,?,?,?,?,?,?,?,?,?)");
+            pr.setInt(1, 0);
+            pr.setInt(2, nro);
+            pr.setString(3, jTextFieldNombre.getText());
+            if (jTextFieldCedula.getText().equals("")) {
+                pr.setInt(4, 0);
+            } else {
+                pr.setInt(4, Integer.parseInt(jTextFieldCedula.getText().trim()));
+            }
+            pr.setInt(5, Login.idUsuario);
+            pr.setDouble(6, utilidad);
+            pr.setDate(7, fecho_i_bd);
+            pr.setDouble(8, Double.parseDouble(jTextFieldTotal.getText().replace(",", "")));
+            pr.setDouble(9, efectivo);
+            pr.setDouble(10, cambio);
+            pr.setString(11, FormaPago);
+            pr.setDouble(12, saldo);
+
+            pr.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println(e);
+            JOptionPane.showMessageDialog(null, "Error al subir Venta: " + e);
+            Errores.Errores("Error al subir venta: " + e);
+        }
+    }
+
+    public void eliminarProducto() {
+        DefaultTableModel tabla = (DefaultTableModel) jTableVenta.getModel();
+        int row = jTableVenta.getSelectedRow();
+        utilidaTotal.remove(row);
+        tabla.removeRow(jTableVenta.getSelectedRow());
+        total();
+    }
+
+    public void cambiarCant() {
+        int row = jTableVenta.getSelectedRow();
+        String codigo = jTableVenta.getValueAt(row, 0).toString();
+        int cant = Integer.parseInt(jTableVenta.getValueAt(row, 3).toString());
+        int precio = Integer.parseInt(jTableVenta.getValueAt(row, 2).toString().replace(",", ""));
+        int total1 = cant * precio;
+        double util = (precio - Utilidad.costo(codigo)) * cant;
+        utilidaTotal.set(row, util);
+        jTableVenta.setValueAt(FormatoPesos.formato(total1), row, 4);
+    }
+
+    public static int tabla(String codigo) {
+        int l = -1;
+        for (int i = 0; i < jTableVenta.getRowCount(); i++) {
+            if (jTableVenta.getValueAt(i, 0).toString().equals(codigo)) {
+                l = i;
+            }
+        }
+        return l;
+    }
+
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -233,8 +449,6 @@ public final class Ventas extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jScrollPane3 = new javax.swing.JScrollPane();
-        jTableVenta1 = new javax.swing.JTable();
         jLabel1 = new javax.swing.JLabel();
         jLabelFecha = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
@@ -256,20 +470,10 @@ public final class Ventas extends javax.swing.JFrame {
         jLabelRegresar = new javax.swing.JLabel();
         jLabelRegresar1 = new javax.swing.JLabel();
         jLabelImprimir = new javax.swing.JLabel();
-
-        jTableVenta1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
-        jTableVenta1.getTableHeader().setReorderingAllowed(false);
-        jScrollPane3.setViewportView(jTableVenta1);
+        jButtonBuscando = new javax.swing.JButton();
+        jLabelTelefono = new javax.swing.JLabel();
+        jLabel12 = new javax.swing.JLabel();
+        jLabelSaldo = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setSize(new java.awt.Dimension(1000, 600));
@@ -351,7 +555,7 @@ public final class Ventas extends javax.swing.JFrame {
         });
 
         jLabel2.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel2.setText("Creado por Corporacion Portillo ADMP ®©™ 2022 V1.0");
+        jLabel2.setText("Creado por Corporacion Portillo CORPORT ADMP ®©™ 2023 V2.0");
         jLabel2.setAlignmentX(253);
         jLabel2.setBorder(javax.swing.BorderFactory.createMatteBorder(1, 1, 1, 1, new java.awt.Color(0, 255, 255)));
 
@@ -381,6 +585,7 @@ public final class Ventas extends javax.swing.JFrame {
         jTableVenta.setGridColor(new java.awt.Color(51, 153, 255));
         jTableVenta.setOpaque(false);
         jTableVenta.setRowHeight(40);
+        jTableVenta.setRowMargin(2);
         jTableVenta.setSelectionBackground(new java.awt.Color(0, 102, 255));
         jTableVenta.setSelectionForeground(new java.awt.Color(0, 0, 204));
         jTableVenta.getTableHeader().setReorderingAllowed(false);
@@ -412,6 +617,25 @@ public final class Ventas extends javax.swing.JFrame {
             }
         });
 
+        jButtonBuscando.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonBuscandoActionPerformed(evt);
+            }
+        });
+
+        jLabelTelefono.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jLabelTelefono.setForeground(new java.awt.Color(255, 255, 255));
+        jLabelTelefono.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+
+        jLabel12.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jLabel12.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel12.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        jLabel12.setText("Saldo: ");
+
+        jLabelSaldo.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jLabelSaldo.setForeground(new java.awt.Color(255, 255, 255));
+        jLabelSaldo.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -440,22 +664,20 @@ public final class Ventas extends javax.swing.JFrame {
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(jLabelRegresar1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jLabelImprimir, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addComponent(jLabelImprimir, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jButtonBuscando, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))
                                     .addGroup(layout.createSequentialGroup()
                                         .addContainerGap()
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                            .addComponent(jLabel9))
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(10, 10, 10)
                                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                             .addGroup(layout.createSequentialGroup()
                                                 .addGap(187, 187, 187)
                                                 .addComponent(jLabel7)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                                 .addComponent(jLabelNoVenta, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                            .addComponent(jTextFieldCodigo, javax.swing.GroupLayout.PREFERRED_SIZE, 283, javax.swing.GroupLayout.PREFERRED_SIZE)
                                             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                                .addComponent(jLabelBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                                                 .addGroup(layout.createSequentialGroup()
                                                     .addComponent(jTextFieldCedula, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)
                                                     .addGap(31, 31, 31)
@@ -464,10 +686,24 @@ public final class Ventas extends javax.swing.JFrame {
                                                     .addComponent(jTextFieldNombre, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE))
                                                 .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                                                     .addGap(83, 83, 83)
-                                                    .addComponent(jButtonVender, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE))))))
-                                .addGap(35, 35, 35)))
+                                                    .addComponent(jButtonVender, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGap(12, 12, 12)
+                                        .addComponent(jLabelTelefono, javax.swing.GroupLayout.PREFERRED_SIZE, 185, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jLabel12)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jLabelSaldo, javax.swing.GroupLayout.PREFERRED_SIZE, 178, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addContainerGap()
+                                        .addComponent(jLabel9)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jTextFieldCodigo, javax.swing.GroupLayout.PREFERRED_SIZE, 283, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jLabelBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGap(50, 50, 50)))
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane2)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 441, Short.MAX_VALUE)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel13)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -478,10 +714,11 @@ public final class Ventas extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(111, 111, 111)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabelRegresar1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabelRegresar, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabelImprimir, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabelRegresar1, javax.swing.GroupLayout.DEFAULT_SIZE, 40, Short.MAX_VALUE)
+                    .addComponent(jLabelRegresar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabelImprimir, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jButtonBuscando, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
@@ -502,17 +739,23 @@ public final class Ventas extends javax.swing.JFrame {
                             .addComponent(jLabel7)
                             .addComponent(jLabelNoVenta, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(25, 25, 25)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jTextFieldCedula, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(jLabel1)
+                                .addComponent(jLabel6)
+                                .addComponent(jTextFieldNombre, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel1)
-                            .addComponent(jTextFieldCedula, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel6)
-                            .addComponent(jTextFieldNombre, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(16, 16, 16)
+                            .addComponent(jLabelTelefono)
+                            .addComponent(jLabel12)
+                            .addComponent(jLabelSaldo))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel9)
                             .addComponent(jTextFieldCodigo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabelBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(199, 199, 199)
+                        .addGap(177, 177, 177)
                         .addComponent(jButtonVender, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 108, Short.MAX_VALUE))))
         );
@@ -524,6 +767,10 @@ public final class Ventas extends javax.swing.JFrame {
         System.out.println(jTableVenta.getRowCount());
         if (jTableVenta.getRowCount() != 0) {
             vender();
+            Administrador.jProgressBar1.setValue(Utilidad.utilidadMes());
+            int porsentaje = (jProgressBar1.getValue()/jProgressBar1.getMaximum())*100;
+            jProgressBar1.setString("%" + porsentaje);
+            Administrador.utilidadPor();
         } else {
             JOptionPane.showMessageDialog(this, "No hay Productos Para Venta");
         }
@@ -550,8 +797,8 @@ public final class Ventas extends javax.swing.JFrame {
             limpiar();
             nr--;
             jLabelNoVenta.setText("" + nr);
-            buscarVentas();
-            buscarDetalle();
+            buscarVentas(String.valueOf(nr));
+            buscarDetalle(String.valueOf(nr));
             jButtonVender.setVisible(false);
         }
     }//GEN-LAST:event_jLabelRegresarMouseClicked
@@ -580,8 +827,8 @@ public final class Ventas extends javax.swing.JFrame {
                     nro++;
                     jLabelNoVenta.setText("" + nro);
                     limpiar();
-                    buscarDetalle();
-                    buscarVentas();
+                    buscarDetalle(String.valueOf(nro));
+                    buscarVentas(String.valueOf(nro));
                 }
             }
         } catch (SQLException e) {
@@ -618,226 +865,29 @@ public final class Ventas extends javax.swing.JFrame {
     }//GEN-LAST:event_jTableVentaKeyPressed
 
     private void jTableVentaKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTableVentaKeyReleased
+
+        int fila = jTableVenta.getSelectedRow();
+        int column = jTableVenta.getSelectedColumn();
+        if (column == 2 && !Validaciones.validarString(evt)) {
+            int precio = Integer.parseInt(jTableVenta.getValueAt(fila, 2).toString().replace(",", ""));
+            jTableVenta.setValueAt(FormatoPesos.formato(precio), fila, 2);
+        }
         if (!Validaciones.validarEnter(evt)) {
             cambiarCant();
             total();
         }
     }//GEN-LAST:event_jTableVentaKeyReleased
 
-    public void vender() {
-        new FormaPago(this, true).setVisible(true);
-        if (FormaPago.m) {
-            int n = JOptionPane.showConfirmDialog(null, "¿Desea imprimir Factura?", "Venta Exitosa", JOptionPane.YES_NO_OPTION);
-            if (n == 0) {
-                imprimir1();
-            }
-            jTextFieldCedula.setText("");
-            jTextFieldNombre.setText("");
-            jTextFieldTotal.setText("0");
-            limpiar();
-            utilidaTotal.clear();
-            nroVenta();
-            Administrador.ventas();
-        }
-    }
-
-    public static void total() {
-        DecimalFormat dm = new DecimalFormat("###,###");
-        int t = 0;
-        for (int i = 0; i < jTableVenta.getRowCount(); i++) {
-            t += Integer.parseInt(jTableVenta.getValueAt(i, 4).toString().replaceAll("[\\D]", ""));
-        }
-        jTextFieldTotal.setText(dm.format(t));
-    }
-
-    public static void producto() {
-        DefaultTableModel tabla = (DefaultTableModel) jTableVenta.getModel();
-        DecimalFormat dm = new DecimalFormat("###,###");
-        try {
-            String codigo = jTextFieldCodigo.getText().trim();
-            Connection cnn = Conexion.Conexion();
-            PreparedStatement pre = cnn.prepareStatement("select codigo,producto,precio_venta from producto where codigo = ? or codigo_barras = ?");
-            pre.setString(1, codigo);
-            pre.setString(2, codigo);
-            ResultSet rs = pre.executeQuery();
-            if (rs.next()) {
-                int i = tabla(rs.getString(1));
-                if (i >= 0) {
-                    int cant = Integer.parseInt(jTableVenta.getValueAt(i, 3).toString());
-                    int precio = Integer.parseInt(jTableVenta.getValueAt(i, 2).toString().replaceAll("[\\D]", ""));
-                    cant++;
-                    int totalV = precio * cant;
-                    jTableVenta.setValueAt(cant, i, 3);
-                    jTableVenta.setValueAt(dm.format(totalV), i, 4);
-                    utilidaTotal.set(i, (precio-Utilidad.costo(codigo))* cant);
-                    System.out.println(utilidaTotal);
-                    total();
-                } else {
-                    String[] datos = new String[5];
-                    datos[0] = rs.getString(1);
-                    datos[1] = rs.getString(2);
-                    datos[2] = dm.format(rs.getInt(3));
-                    datos[3] = "1";
-                    datos[4] = dm.format(rs.getInt(3));
-                    tabla.addRow(datos);
-                    Object obg = Utilidad.utilidad(codigo);
-                    utilidaTotal.add(obg);
-                    System.out.println(utilidaTotal);
-                    total();
-                }
-                jTextFieldCodigo.setText("");
-            } else {
-                m = true;
-                new Catalogo().setVisible(true);
-            }
-
-        } catch (SQLException e) {
-            System.err.println(e);
-            Errores.Errores("Error al Agregar Producto: " + e);
-        }
-    }
-
-    public void buscarcl() {
-        if (!jTextFieldCedula.getText().equals("")) {
-            try ( Connection cn = Conexion.Conexion()) {
-
-                String cedula = jTextFieldCedula.getText();
-                PreparedStatement pr = cn.prepareStatement("select nombres from clientes where cedula = ?");
-                pr.setString(1, cedula);
-                ResultSet rs = pr.executeQuery();
-                if (rs.next()) {
-                    String nombre = rs.getString(1);
-                    jTextFieldNombre.setText(nombre);
-
-                    jTextFieldNombre.requestFocus();
-
-                } else {
-
-                    int i = JOptionPane.showConfirmDialog(null, "No se encuentra cliente", "¿desea ingresar el cliente?", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
-                    System.out.println(i);
-                    if (i == 0) {
-
-                        IngresarClientes cliente = new IngresarClientes(this, true);
-                        IngresarClientes.jTextFieldCedula.setText(cedula);
-                        cliente.setVisible(true);
-                        buscarcl();
-                    }
-                }
-            } catch (SQLException e) {
-                System.out.println(e);
-                Errores.Errores("Error al Buscar CLiente: " + e);
-            }
-        }
-    }
-
-    public static void limpiar() {
-        DefaultTableModel tabla = (DefaultTableModel) jTableVenta.getModel();
-        for (int i = 0; i < jTableVenta.getRowCount(); i++) {
-            tabla.removeRow(i);
-            i--;
-            jTextFieldCedula.setText("");
-            jTextFieldNombre.setText("");
-            jTextFieldTotal.setText("0");
-
-        }
-    }
-
-    public static void detalleVenta() {
-        try {
-
-            Connection cn = Conexion.Conexion();
-            PreparedStatement pr = cn.prepareStatement("INSERT INTO detallesventa (iddetallesVenta,nro_venta,codigo,producto,precioUnitario,cantidad,utilidad,precioTotal) values(?,?,?,?,?,?,?,?)");
-            for (int i = 0; i < jTableVenta.getRowCount(); i++) {
-                pr.setInt(1, 0);
-                pr.setInt(2, Integer.parseInt(jLabelNoVenta.getText()));
-                pr.setString(3, jTableVenta.getValueAt(i, 0).toString());
-                pr.setString(4, jTableVenta.getValueAt(i, 1).toString());
-                pr.setDouble(5, Double.parseDouble(jTableVenta.getValueAt(i, 2).toString().replaceAll("[\\D]", "")));
-                pr.setInt(6, Integer.parseInt(jTableVenta.getValueAt(i, 3).toString()));
-                pr.setDouble(7, (double) utilidaTotal.get(i));
-                pr.setDouble(8, Double.parseDouble(jTableVenta.getValueAt(i, 4).toString().replaceAll("[\\D]", "")));
-                pr.executeUpdate();
-                String codigo = jTableVenta.getValueAt(i, 0).toString();
-                int cantidad = Integer.parseInt(jTableVenta.getValueAt(i, 3).toString());
-                ActualizarCantidad.restar(cantidad, codigo);
-            }
-
-        } catch (SQLException e) {
-            System.err.println(e);
-            JOptionPane.showMessageDialog(null, "Error al subir detalles venta: "+e);
-            Errores.Errores("Error al Subir Detalles de venta: " + e);
-        }
-    }
-
-    public static void venta(String FormaPago, double cambio, double efectivo) {
-        try {
-            double utilidad = 0;
-            for (int i = 0; i < utilidaTotal.size(); i++) {
-                utilidad += Double.parseDouble(utilidaTotal.get(i).toString());
-            }
-            int nro = nroVenta();
-            java.sql.Date fecho_i_bd = new java.sql.Date(Fechas.fechaActualDate().getTime());
-            Connection cn = Conexion.Conexion();
-            PreparedStatement pr = cn.prepareStatement("INSERT INTO ventas (idventas,nroVentas,cliente,cedula_cliente,idUsuario,utilidad,fecha,precio_Total,Efectivo,Cambio,FormaPago) values(?,?,?,?,?,?,?,?,?,?,?)");
-            pr.setInt(1, 0);
-            pr.setInt(2, nro);
-            pr.setString(3, jTextFieldNombre.getText());
-            if (jTextFieldCedula.getText().equals("")) {
-                pr.setInt(4, 0);
-            } else {
-                pr.setInt(4, Integer.parseInt(jTextFieldCedula.getText().trim()));
-            }
-            pr.setInt(5, Login.idUsuario);
-            pr.setDouble(6, utilidad);
-            pr.setDate(7, fecho_i_bd);
-            pr.setDouble(8, Double.parseDouble(jTextFieldTotal.getText().replaceAll("[\\D]", "")));
-            pr.setDouble(9, efectivo);
-            pr.setDouble(10, cambio);
-            pr.setString(11, FormaPago);
-
-            pr.executeUpdate();
-
-        } catch (SQLException e) {
-            System.err.println(e);
-            JOptionPane.showMessageDialog(null, "Error al subir Venta: "+e);
-            Errores.Errores("Error al subir venta: " + e);
-        }
-    }
-
-    public void eliminarProducto() {
-        DefaultTableModel tabla = (DefaultTableModel) jTableVenta.getModel();
-        int row = jTableVenta.getSelectedRow();
-        utilidaTotal.remove(row);
-        tabla.removeRow(row);
-        total();
-    }
-
-    public void cambiarCant() {
-        DecimalFormat dm = new DecimalFormat("###,###");
-        int row = jTableVenta.getSelectedRow();
-        String codigo = jTableVenta.getValueAt(row, 0).toString();
-        int cant = Integer.parseInt(jTableVenta.getValueAt(row, 3).toString());
-        int precio = Integer.parseInt(jTableVenta.getValueAt(row, 2).toString().replaceAll("[\\D]", ""));
-        int total1 = cant * precio;
-        double util = (precio -Utilidad.costo(codigo))*cant;
-        utilidaTotal.set(row, util);
-        jTableVenta.setValueAt(dm.format(total1), row, 4);
-    }
-
-    public static int tabla(String codigo) {
-        int l = -1;
-        for (int i = 0; i < jTableVenta.getRowCount(); i++) {
-            if (jTableVenta.getValueAt(i, 0).toString().equals(codigo)) {
-                l = i;
-            }
-        }
-        return l;
-    }
+    private void jButtonBuscandoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonBuscandoActionPerformed
+        new Buscar_Venta(this, true).setVisible(true);
+    }//GEN-LAST:event_jButtonBuscandoActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButtonBuscando;
     private javax.swing.JButton jButtonVender;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -846,15 +896,15 @@ public final class Ventas extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JLabel jLabelBuscar;
-    private javax.swing.JLabel jLabelFecha;
+    private static javax.swing.JLabel jLabelFecha;
     private javax.swing.JLabel jLabelImprimir;
     public static javax.swing.JLabel jLabelNoVenta;
     private javax.swing.JLabel jLabelRegresar;
     private javax.swing.JLabel jLabelRegresar1;
+    protected static javax.swing.JLabel jLabelSaldo;
+    private javax.swing.JLabel jLabelTelefono;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPane3;
     private static javax.swing.JTable jTableVenta;
-    private static javax.swing.JTable jTableVenta1;
     public static javax.swing.JTextField jTextFieldCedula;
     public static javax.swing.JTextField jTextFieldCodigo;
     private static javax.swing.JTextField jTextFieldNombre;

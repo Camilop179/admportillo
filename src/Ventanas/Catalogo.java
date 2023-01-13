@@ -20,7 +20,8 @@ import javax.swing.table.TableColumnModel;
  */
 public final class Catalogo extends javax.swing.JFrame {
 
-    public static int m = 0;
+    public static int cata = 0;
+    String sql = "";
 
     public Catalogo() {
         Fondo fondo = new Fondo("FondoMenu.jpg");
@@ -34,8 +35,17 @@ public final class Catalogo extends javax.swing.JFrame {
         setLocationRelativeTo(null);
 
         new Imagenes("Agregar.gif", jLabelNP);
+        if (Ventas.m) {
+            sql = "select p.idProducto,p.codigo,p.codigo_barras,p.producto"
+                    + ",p.precio_venta,p.cantidad,p.utilidad,p.porcentaje_utilidad,p.tipo,p.seccion"
+                    + ",p.marca,p.proveedor,u.nombre,p.fecha_ingreso,p.fecha_vencimiento from producto p left join usuarios u on p.idUsuario = u.idusuarios";
 
-        inventario();
+        } else {
+            sql = "select p.idProducto,p.codigo,p.codigo_barras,p.producto,p.precio_compra"
+                    + ",total_cost,p.precio_venta,p.cantidad,p.utilidad,p.porcentaje_utilidad,p.tipo,p.seccion"
+                    + ",p.marca,p.proveedor,u.nombre,p.fecha_ingreso,p.fecha_vencimiento from producto p left join usuarios u on p.idUsuario = u.idusuarios";
+        }
+        inventario(sql, Ventas.m);
         total();
     }
 
@@ -45,7 +55,7 @@ public final class Catalogo extends javax.swing.JFrame {
     public static void total() {
         int t = 0;
         for (int i = 0; i < Table.getRowCount(); i++) {
-            t += Double.parseDouble(Table.getValueAt(i,5).toString());
+            t += Double.parseDouble(Table.getValueAt(i, 5).toString());
         }
 
         DecimalFormat dm = new DecimalFormat("###,###");
@@ -56,33 +66,33 @@ public final class Catalogo extends javax.swing.JFrame {
     /**
      * Consulatar Base de Datos para los Productos
      */
-    public static void inventario() {
-        DefaultTableModel tabla = tabla();
-
-        String[] datos = new String[17];
+    public static void inventario(String sql, boolean m) {
+        int column = 17;
+        if (m) {
+            column = 15;
+        }
+        String[] datos = new String[column];
+        DefaultTableModel tabla = tabla(m, column);
         try {
             Connection cnn = Conexion.Conexion();
 
-            PreparedStatement pre = cnn.prepareStatement("select p.idProducto,p.codigo,p.codigo_barras,p.producto,p.precio_compra"
-                    + ",total_cost,p.precio_venta,p.cantidad,p.utilidad,p.porcentaje_utilidad,p.tipo,p.seccion"
-                    + ",p.marca,p.proveedor,u.nombre,p.fecha_ingreso,p.fecha_vencimiento from producto p left join usuarios u on p.idUsuario = u.idusuarios");
+            PreparedStatement pre = cnn.prepareStatement(sql);
             ResultSet rs = pre.executeQuery();
 
             while (rs.next()) {
-                for (int i = 0; i < 17; i++) {
+                for (int i = 0; i < column; i++) {
                     datos[i] = rs.getString(i + 1);
                 }
+
                 tabla.addRow(datos);
             }
 
         } catch (SQLException e) {
             System.err.println(e);
         }
-        
-
     }
-   
-    public static DefaultTableModel tabla() {
+
+    public static DefaultTableModel tabla(boolean m, int n) {
         DefaultTableModel tabla = new DefaultTableModel() {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -93,8 +103,10 @@ public final class Catalogo extends javax.swing.JFrame {
         tabla.addColumn("Codigo");
         tabla.addColumn("Codigo Barra");
         tabla.addColumn("Producto");
-        tabla.addColumn("Precio Costo");
-        tabla.addColumn("Total");
+        if (!m) {
+            tabla.addColumn("Precio Costo");
+            tabla.addColumn("Total");
+        }
         tabla.addColumn("Precio Venta");
         tabla.addColumn("Cantidad");
         tabla.addColumn("Utilidad");
@@ -117,6 +129,7 @@ public final class Catalogo extends javax.swing.JFrame {
         columnModel.getColumn(3).setPreferredWidth(300);
         columnModel.getColumn(4).setPreferredWidth(100);
         columnModel.getColumn(5).setPreferredWidth(100);
+
         columnModel.getColumn(6).setPreferredWidth(100);
         columnModel.getColumn(7).setPreferredWidth(100);
         columnModel.getColumn(8).setPreferredWidth(100);
@@ -125,26 +138,15 @@ public final class Catalogo extends javax.swing.JFrame {
         columnModel.getColumn(11).setPreferredWidth(100);
         columnModel.getColumn(12).setPreferredWidth(100);
         columnModel.getColumn(13).setPreferredWidth(150);
-        columnModel.getColumn(14).setPreferredWidth(150);
-        columnModel.getColumn(15).setPreferredWidth(150);
 
-        columnModel.getColumn(0).setResizable(false);
-        columnModel.getColumn(1).setResizable(false);
-        columnModel.getColumn(2).setResizable(false);
-        columnModel.getColumn(3).setResizable(false);
-        columnModel.getColumn(4).setResizable(false);
-        columnModel.getColumn(5).setResizable(false);
-        columnModel.getColumn(6).setResizable(false);
-        columnModel.getColumn(7).setResizable(false);
-        columnModel.getColumn(8).setResizable(false);
-        columnModel.getColumn(9).setResizable(false);
-        columnModel.getColumn(10).setResizable(false);
-        columnModel.getColumn(11).setResizable(false);
-        columnModel.getColumn(12).setResizable(false);
-        columnModel.getColumn(13).setResizable(false);
-        columnModel.getColumn(14).setResizable(false);
-        columnModel.getColumn(15).setResizable(false);
+        if (!m) {
+            columnModel.getColumn(14).setPreferredWidth(150);
+            columnModel.getColumn(15).setPreferredWidth(150);
+        }
 
+        for (int i = 0; i < n; i++) {
+            columnModel.getColumn(i).setResizable(false);
+        }
         return tabla;
     }
 
@@ -332,7 +334,6 @@ public final class Catalogo extends javax.swing.JFrame {
     }//GEN-LAST:event_jLabelNPMouseClicked
 
     private void jTextFieldBusquedaKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldBusquedaKeyReleased
-        
 
         boolean codigo = jCheckBoxCodigo.isSelected();
         boolean codigoBarra = jCheckBoxCodigo_Barra.isSelected();
@@ -354,17 +355,17 @@ public final class Catalogo extends javax.swing.JFrame {
     private void TableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TableMouseClicked
         String cod;
         int i = Table.getSelectedRow();
-        if(Ventas.m) {
+        if (Ventas.m) {
             cod = Table.getValueAt(i, 1).toString();
             Ventas.jTextFieldCodigo.setText(cod);
             this.dispose();
             Ventas.producto();
-        }else if(Compras.n){
+        } else if (Compras.n) {
             cod = Table.getValueAt(i, 1).toString();
             Compras.jTextFieldCodigo.setText(cod);
             this.dispose();
             Compras.producto();
-        }else if (Administrador.m) {
+        } else if (Administrador.m) {
             if (evt.getClickCount() == 2) {
                 if (Ventas.m == true) {
                     cod = Table.getValueAt(i, 1).toString();
@@ -372,14 +373,14 @@ public final class Catalogo extends javax.swing.JFrame {
                     this.dispose();
                     Ventas.producto();
                 } else {
-                    m = 1;
+                    cata = 1;
                     int id = Integer.parseInt(Table.getValueAt(i, 0).toString());
                     new Producto().setVisible(true);
                     Producto.modificar(id);
                     Producto.idp = id;
                 }
             }
-        } 
+        }
 
 
     }//GEN-LAST:event_TableMouseClicked
@@ -396,7 +397,7 @@ public final class Catalogo extends javax.swing.JFrame {
                         pr.setInt(1, Integer.parseInt(Table.getValueAt(i, 0).toString()));
                         pr.executeUpdate();
                         JOptionPane.showMessageDialog(null, "Producto eliminado");
-                        inventario();
+                        inventario(sql, Ventas.m);
                     }
                 } catch (HeadlessException | NumberFormatException | SQLException e) {
                 }
@@ -420,19 +421,21 @@ public final class Catalogo extends javax.swing.JFrame {
         jCheckBoxNombre.setSelected(false);
     }//GEN-LAST:event_jCheckBoxCodigo_BarraActionPerformed
     public void buscar(String columna) {
-        DefaultTableModel tabla = tabla();
-        String[] datos = new String[17];
+        int column = 17;
+        if (Ventas.m) {
+            column = 15;
+        }
+        DefaultTableModel tabla = tabla(Ventas.m, column);
+        String[] datos = new String[column];
         try {
             Connection cnn = Conexion.Conexion();
 
-            PreparedStatement pre = cnn.prepareStatement("select p.idProducto,p.codigo,p.codigo_barras,p.producto,p.precio_compra"
-                    + ",p.total_cost,p.precio_venta,p.cantidad,p.utilidad,p.porcentaje_utilidad,p.tipo,p.seccion"
-                    + ",p.marca,p.proveedor,u.nombre,p.fecha_ingreso,p.fecha_vencimiento from producto p left join usuarios u on u.idusuarios = p.idUsuario where p."+columna+" like ?");
-            pre.setString(1, '%'+jTextFieldBusqueda.getText().trim()+'%');
+            PreparedStatement pre = cnn.prepareStatement(sql + " where p." + columna + " like ?");
+            pre.setString(1, '%' + jTextFieldBusqueda.getText().trim() + '%');
             ResultSet rs = pre.executeQuery();
 
             while (rs.next()) {
-                for (int i = 0; i < 17; i++) {
+                for (int i = 0; i < column; i++) {
                     datos[i] = rs.getString(i + 1);
                 }
                 tabla.addRow(datos);
