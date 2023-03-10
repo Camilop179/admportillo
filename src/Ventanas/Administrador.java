@@ -12,6 +12,10 @@ import Clases.FormatoPesos;
 import Clases.ImagenBoton;
 import Clases.TotalVentas;
 import Clases.Utilidad;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.RoundRectangle2D;
 import java.sql.*;
@@ -22,6 +26,8 @@ import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JComponent;
+import javax.swing.plaf.basic.BasicProgressBarUI;
 
 /**
  *
@@ -62,6 +68,22 @@ public final class Administrador extends javax.swing.JFrame {
     }
 
     public void progesoUtilidad() {
+        jProgressBar1.setUI(new BasicProgressBarUI(){
+            @Override
+            protected void paintDeterminate(Graphics g, JComponent c) {
+                Graphics2D g2 = (Graphics2D) g;
+                int ancho = jProgressBar1.getWidth();
+                int alto = jProgressBar1.getHeight();
+                
+                double por = jProgressBar1.getPercentComplete();
+                
+                ancho = (int) (ancho*por);
+                g2.setColor(Color.RED);
+                Rectangle progreso = new Rectangle(0,0,ancho,alto);
+                g2.fill(progreso);
+                
+            }
+        });
         try ( Connection cn = Conexion.Conexion()) {
             int utilidad = 0;
             LocalDate fecha = LocalDate.now();
@@ -74,9 +96,11 @@ public final class Administrador extends javax.swing.JFrame {
                 mesNum--;
                 añoNum = fecha.getYear();
             }
+            Calendar dia = Calendar.getInstance();
+            dia.set(Calendar.MONTH, dia.get(Calendar.MONTH)-1);
             Month mes = Month.of(mesNum);
             LocalDate fecha1 = LocalDate.of(añoNum, mes.getValue(), 1);
-            LocalDate fecha2 = LocalDate.of(añoNum, mes.getValue(), Calendar.getInstance().getActualMaximum(Calendar.DAY_OF_MONTH));
+            LocalDate fecha2 = LocalDate.of(añoNum, mes.getValue(), dia.getActualMaximum(Calendar.DAY_OF_MONTH));
             PreparedStatement pr1 = cn.prepareStatement("select utilidad from ventas where fecha between ? and ?");
             pr1.setDate(1, new java.sql.Date(java.util.Date.from(fecha1.atStartOfDay(ZoneId.systemDefault()).toInstant()).getTime()));
             pr1.setDate(2, new java.sql.Date(java.util.Date.from(fecha2.atStartOfDay(ZoneId.systemDefault()).toInstant()).getTime()));
@@ -89,7 +113,7 @@ public final class Administrador extends javax.swing.JFrame {
             utilidadPor();
             cn.close();
         } catch (SQLException ex) {
-            System.err.println(ex);
+            System.err.println("Error mes"+ex);
         }
     }
 
